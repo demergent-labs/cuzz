@@ -59,7 +59,12 @@ async function main() {
     program
         .option('--canister-name <name>', `name of the canister`)
         .option('--skip-deploy', 'skip deployment and just get candid')
-        .option('--candid-path <path>', 'path to candid file to read from');
+        .option('--candid-path <path>', 'path to candid file to read from')
+        .option(
+            '--call-delay <number>',
+            'number of seconds between a set of calls to all canister methods',
+            '1'
+        );
 
     program.parse();
 
@@ -67,11 +72,14 @@ async function main() {
     const canisterName: string = options.canisterName;
     const skipDeploy: boolean = options.skipDeploy ?? false;
     const candidPath: string | undefined = options.candidPath;
+    const callDelay: number = Number(options.callDelay) * 1_000;
 
     const candidService: string = candidPath
         ? fs.readFileSync(candidPath, 'utf-8')
         : !skipDeploy
-        ? (execSync(`dfx deploy ${canisterName}`, { stdio: 'inherit' }),
+        ? (execSync(`dfx deploy ${canisterName} --upgrade-unchanged`, {
+              stdio: 'inherit'
+          }),
           execSync(`dfx canister metadata ${canisterName} candid:service`, {
               encoding: 'utf-8'
           }))
@@ -92,9 +100,6 @@ async function main() {
     const canisterMethodArbitraries = generateArbitrary(ast);
 
     console.log('canisterMethodArbitraries', canisterMethodArbitraries);
-
-    // TODO now with the canisterMethodArbitraries, we need to create a loop
-    // TODO and call the methods with those random values
 
     const idlString = compile_candid(candidService);
 
@@ -129,18 +134,76 @@ async function main() {
         canisterId
     });
 
-    for (const [methodName, methodArbitrary] of Object.entries(
-        canisterMethodArbitraries
-    )) {
-        console.info(`calling: ${methodName}\n`);
+    let numCalls = 0;
+    const startTime = Date.now();
 
-        const sampleParams = fc.sample(methodArbitrary, 1)[0];
+    while (true) {
+        for (const [methodName, methodArbitrary] of Object.entries(
+            canisterMethodArbitraries
+        )) {
+            const sampleParams = fc.sample(methodArbitrary, 1)[0];
 
-        console.info(`      params:`, sampleParams);
+            const memoryActor = Actor.createActor(
+                ({ IDL }) => {
+                    return IDL.Service({
+                        _azle_memory_usage: IDL.Func([], [IDL.Nat64], [])
+                    });
+                },
+                {
+                    agent,
+                    canisterId
+                }
+            );
 
-        const result = await actor[methodName](...sampleParams);
+            async function resultAndMemoryUsage(...params: any[]) {
+                numCalls++;
+                return {
+                    result: await actor[methodName](...params),
+                    memoryUsage: await memoryActor._azle_memory_usage()
+                };
+            }
+            // try {
+            //     const result = await actor[methodName](...sampleParams);
+            //     console.info(`      result:`, result, '\n');
+            // } catch (error) {
+            //     console.error(`Error calling ${methodName}:`, error);
+            // }
 
-        console.info(`      result:`, result, '\n');
+            // TODO let's test what a memory leak looks like
+            resultAndMemoryUsage(...sampleParams)
+                .then(({ result, memoryUsage }) => {
+                    const memoryUsageInMegabytes =
+                        Number(memoryUsage) / (1_024 * 1_024);
+                    const formattedMemoryUsage = `${memoryUsageInMegabytes.toFixed(
+                        2
+                    )} MB`;
+                    const elapsedTime = (
+                        (Date.now() - startTime) /
+                        1_000
+                    ).toFixed(1);
+
+                    console.clear();
+                    console.info(`Time elapsed: ${elapsedTime}s\n`);
+                    console.info(`number of calls: ${numCalls}\n`);
+                    console.info(
+                        `canister heap memory:`,
+                        formattedMemoryUsage,
+                        '\n'
+                    );
+                    console.info(`called: ${methodName}\n`);
+
+                    console.info(`      params:`, sampleParams);
+                    console.info(`      result:`, result, '\n');
+                })
+                .catch((error) => {
+                    // TODO we need to understand expected versus unexpected errors
+                    // throw error;
+                    console.error(error);
+                    process.exit(1);
+                });
+
+            await new Promise((resolve) => setTimeout(resolve, callDelay));
+        }
     }
 }
 
