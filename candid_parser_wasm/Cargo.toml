@@ -12,3 +12,4 @@ crate-type = ["cdylib"]
 candid_parser = { path = "../../candid/rust/candid_parser" }
 serde-wasm-bindgen = "0.6.5"
 wasm-bindgen = "0.2.95"
+web-sys = { version = "0.3.72", features = ["console"] }
