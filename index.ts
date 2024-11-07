@@ -1,5 +1,8 @@
 #!/usr/bin/env -S npx tsx
 
+// TODO make sure to put in a check for memory leaks
+// TODO maybe we just report if memory is increasing?
+
 // TODO I think the user should just have to give the port and the canister name or id
 // TODO and then cuzz can just directly ask the replica for the Candid file
 // TODO and we can compile that here and get the actor
@@ -7,7 +10,7 @@
 import { program } from 'commander';
 import { execSync } from 'child_process';
 import { parse_candid, compile_candid } from './candid_parser_wasm/pkg';
-import { IDL } from '@dfinity/candid';
+import { Principal } from '@dfinity/principal';
 import * as fs from 'fs';
 import * as fc from 'fast-check';
 import { Actor, HttpAgent } from '@dfinity/agent';
@@ -23,9 +26,18 @@ type CandidPrimitiveType =
     | 'Int64'
     | 'Int32'
     | 'Int16'
-    | 'Int8';
+    | 'Int8'
+    | 'Null';
 
-type CandidType = { PrimT?: CandidPrimitiveType; VecT?: CandidType };
+type CandidType =
+    | 'PrincipalT'
+    | {
+          PrimT?: CandidPrimitiveType;
+          VecT?: CandidType;
+          VarT?: string;
+          RecordT?: Array<{ label: { Named: string }; typ: CandidType }>;
+          VariantT?: Array<{ label: { Named: string }; typ: CandidType }>;
+      };
 
 type CandidFunction = {
     FuncT: {
@@ -41,7 +53,12 @@ type CandidMethod = {
 };
 
 type CandidAst = {
-    decs: any[];
+    decs: Array<{
+        TypD: {
+            id: string;
+            typ: CandidType;
+        };
+    }>;
     actor: {
         ClassT?: [
             any[],
@@ -137,6 +154,14 @@ async function main() {
     let numCalls = 0;
     const startTime = Date.now();
 
+    let expectedErrors: string[] = [];
+    try {
+        const cuzzConfig = JSON.parse(fs.readFileSync('cuzz.json', 'utf-8'));
+        expectedErrors = cuzzConfig.expectedErrors || [];
+    } catch (error) {
+        // Config file not found or invalid, continue with empty expected errors
+    }
+
     while (true) {
         for (const [methodName, methodArbitrary] of Object.entries(
             canisterMethodArbitraries
@@ -158,25 +183,18 @@ async function main() {
             async function resultAndMemoryUsage(...params: any[]) {
                 numCalls++;
                 return {
-                    result: await actor[methodName](...params),
-                    memoryUsage: await memoryActor._azle_memory_usage()
+                    result: await actor[methodName](...params)
                 };
             }
-            // try {
-            //     const result = await actor[methodName](...sampleParams);
-            //     console.info(`      result:`, result, '\n');
-            // } catch (error) {
-            //     console.error(`Error calling ${methodName}:`, error);
-            // }
 
-            // TODO let's test what a memory leak looks like
             resultAndMemoryUsage(...sampleParams)
-                .then(({ result, memoryUsage }) => {
-                    const memoryUsageInMegabytes =
-                        Number(memoryUsage) / (1_024 * 1_024);
-                    const formattedMemoryUsage = `${memoryUsageInMegabytes.toFixed(
-                        2
-                    )} MB`;
+                .then(async ({ result }) => {
+                    const memoryUsageInMegabytes = Number(
+                        await memoryActor._azle_memory_usage()
+                    );
+                    const formattedMemoryUsage = `${memoryUsageInMegabytes
+                        .toString()
+                        .replace(/\B(?=(\d{3})+(?!\d))/g, '_')} bytes`;
                     const elapsedTime = (
                         (Date.now() - startTime) /
                         1_000
@@ -195,11 +213,39 @@ async function main() {
                     console.info(`      params:`, sampleParams);
                     console.info(`      result:`, result, '\n');
                 })
-                .catch((error) => {
-                    // TODO we need to understand expected versus unexpected errors
-                    // throw error;
-                    console.error(error);
-                    process.exit(1);
+                .catch(async (error) => {
+                    const isExpectedError = expectedErrors.some(
+                        (expectedError) => error.message.includes(expectedError)
+                    );
+
+                    if (!isExpectedError) {
+                        console.error(error);
+                        process.exit(1);
+                    } else {
+                        const memoryUsageInMegabytes = Number(
+                            await memoryActor._azle_memory_usage()
+                        );
+                        const formattedMemoryUsage = `${memoryUsageInMegabytes
+                            .toString()
+                            .replace(/\B(?=(\d{3})+(?!\d))/g, '_')} bytes`;
+                        const elapsedTime = (
+                            (Date.now() - startTime) /
+                            1_000
+                        ).toFixed(1);
+
+                        console.clear();
+                        console.info(`Time elapsed: ${elapsedTime}s\n`);
+                        console.info(`number of calls: ${numCalls}\n`);
+                        console.info(
+                            `canister heap memory:`,
+                            formattedMemoryUsage,
+                            '\n'
+                        );
+                        console.info(`called: ${methodName}\n`);
+
+                        console.info(`      params:`, sampleParams);
+                        console.info(`      result:`, 'expected error', '\n');
+                    }
                 });
 
             await new Promise((resolve) => setTimeout(resolve, callDelay));
@@ -225,7 +271,9 @@ function generateArbitrary(
 
             console.log('funcType', JSON.stringify(funcType, null, 4));
 
-            const argsArbitraries = funcType.args.map(getArbitrary);
+            const argsArbitraries = funcType.args.map((type) =>
+                getArbitrary(type, ast.decs)
+            );
 
             return {
                 ...acc,
@@ -236,44 +284,133 @@ function generateArbitrary(
     );
 }
 
-function getArbitrary(type: CandidType): fc.Arbitrary<unknown> {
+function getArbitrary(
+    type: CandidType,
+    decs: CandidAst['decs']
+): fc.Arbitrary<unknown> {
+    if (type === 'PrincipalT') {
+        return fc
+            .uint8Array()
+            .map((uint8Array) => Principal.fromUint8Array(uint8Array));
+    }
+
     if (type.PrimT === 'Text') {
         return fc.string();
     }
 
-    // if (arg.PrimT === 'Nat') {
-    //     return fc.bigUint();
-    // }
-    // if (arg.PrimT === 'Nat64') {
-    //     return fc.bigUintN(64);
-    // }
-    // if (arg.PrimT === 'Nat32') {
-    //     return fc.nat32();
-    // }
-    // if (arg.PrimT === 'Nat16') {
-    //     return fc.nat(65535); // 2^16 - 1
-    // }
-    // if (arg.PrimT === 'Nat8') {
-    //     return fc.nat(255); // 2^8 - 1
-    // }
-    // if (arg.PrimT === 'Int') {
-    //     return fc.bigInt();
-    // }
-    // if (arg.PrimT === 'Int64') {
-    //     return fc.bigIntN(64);
-    // }
-    // if (arg.PrimT === 'Int32') {
-    //     return fc.integer();
-    // }
-    // if (arg.PrimT === 'Int16') {
-    //     return fc.integer(-32768, 32767); // -2^15 to 2^15-1
-    // }
-    // if (arg.PrimT === 'Int8') {
-    //     return fc.integer(-128, 127); // -2^7 to 2^7-1
-    // }
-    if (type.VecT?.PrimT === 'Nat8') {
-        return fc.uint8Array();
+    if (type.PrimT === 'Nat') {
+        return fc.bigInt({
+            min: 0n
+        });
     }
 
-    throw new Error(`unsupported type: ${type.PrimT}`);
+    if (type.PrimT === 'Nat64') {
+        return fc.bigInt({
+            min: 0n,
+            max: 2n ** 64n - 1n
+        });
+    }
+
+    if (type.PrimT === 'Nat32') {
+        return fc.nat(2 ** 32 - 1);
+    }
+
+    if (type.PrimT === 'Nat16') {
+        return fc.nat(2 ** 16 - 1);
+    }
+
+    if (type.PrimT === 'Nat8') {
+        return fc.nat(2 ** 8 - 1);
+    }
+
+    if (type.PrimT === 'Int') {
+        return fc.bigInt();
+    }
+
+    if (type.PrimT === 'Int64') {
+        return fc.bigInt({
+            min: -(2n ** 63n),
+            max: 2n ** 63n - 1n
+        });
+    }
+
+    if (type.PrimT === 'Int32') {
+        return fc.integer({
+            min: -(2 ** 31),
+            max: 2 ** 31 - 1
+        });
+    }
+
+    if (type.PrimT === 'Int16') {
+        return fc.integer({
+            min: -(2 ** 15),
+            max: 2 ** 15 - 1
+        });
+    }
+
+    if (type.PrimT === 'Int8') {
+        return fc.integer({
+            min: -(2 ** 7),
+            max: 2 ** 7 - 1
+        });
+    }
+
+    if (type.PrimT === 'Null') {
+        return fc.constant(null);
+    }
+
+    if (type.VecT) {
+        if (type.VecT.PrimT === 'Nat8') {
+            return fc.uint8Array({
+                size: 'max',
+                maxLength: 2_000_000
+            });
+        }
+
+        const elementArbitrary = getArbitrary(type.VecT, decs);
+        return fc.array(elementArbitrary);
+    }
+
+    if (type.VarT) {
+        const typeDef = decs.find((dec) => dec.TypD.id === type.VarT);
+        if (!typeDef) {
+            throw new Error(`Type definition not found for ${type.VarT}`);
+        }
+        return getArbitrary(typeDef.TypD.typ, decs);
+    }
+
+    if (type.RecordT) {
+        const recordArbitraries = type.RecordT.map((field) => ({
+            key: field.label.Named,
+            arbitrary: getArbitrary(field.typ, decs)
+        }));
+
+        return fc.record(
+            recordArbitraries.reduce(
+                (acc, { key, arbitrary }) => ({
+                    ...acc,
+                    [key]: arbitrary
+                }),
+                {}
+            )
+        );
+    }
+
+    if (type.VariantT) {
+        const variantArbitraries = type.VariantT.map((variant) => ({
+            key: variant.label.Named,
+            arbitrary:
+                variant.typ.PrimT === 'Null'
+                    ? fc.constant(null)
+                    : getArbitrary(variant.typ, decs)
+        }));
+
+        return fc.oneof(
+            ...variantArbitraries.map(({ key, arbitrary }) =>
+                arbitrary.map((value) => ({ [key]: value }))
+            )
+        );
+    }
+
+    throw new Error(`unsupported type: ${JSON.stringify(type)}`);
 }
