@@ -360,6 +360,7 @@ function getArbitrary(
     }
 
     if (type.VecT) {
+        // @ts-ignore
         if (type.VecT.PrimT === 'Nat8') {
             return fc.uint8Array({
                 size: 'max',
@@ -400,6 +401,7 @@ function getArbitrary(
         const variantArbitraries = type.VariantT.map((variant) => ({
             key: variant.label.Named,
             arbitrary:
+                // @ts-ignore
                 variant.typ.PrimT === 'Null'
                     ? fc.constant(null)
                     : getArbitrary(variant.typ, decs)
