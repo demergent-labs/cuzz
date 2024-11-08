@@ -19,6 +19,8 @@
 
 // TODO once we get a candid string generator, we should use that for call_raw and any other test that expects candid strings
 
+// TODO for the errors we should probably allow a regex or glob pattern
+
 import { program } from 'commander';
 import { execSync } from 'child_process';
 import { parse_candid, compile_candid } from './candid_parser_wasm/pkg';
@@ -49,6 +51,7 @@ type CandidType =
           VarT?: string;
           RecordT?: Array<{ label: { Named: string }; typ: CandidType }>;
           VariantT?: Array<{ label: { Named: string }; typ: CandidType }>;
+          ServT?: CandidMethod[];
       };
 
 type CandidFunction = {
@@ -226,6 +229,7 @@ async function main() {
                     ).toFixed(1);
 
                     console.clear();
+                    console.info(`Canister: ${canisterName}\n`);
                     console.info(`Time elapsed: ${elapsedTime}s\n`);
                     console.info(`number of calls: ${numCalls}\n`);
                     console.info(
@@ -265,6 +269,7 @@ async function main() {
                         ).toFixed(1);
 
                         console.clear();
+                        console.info(`Canister: ${canisterName}\n`);
                         console.info(`Time elapsed: ${elapsedTime}s\n`);
                         console.info(`number of calls: ${numCalls}\n`);
                         console.info(
@@ -320,11 +325,10 @@ function getArbitrary(
     decs: CandidAst['decs']
 ): fc.Arbitrary<unknown> {
     if (type === 'PrincipalT') {
-        // TODO make sure you go from 0 to 29 bytes
         return fc
             .uint8Array({
                 size: 'max',
-                maxLength: 2_000_000
+                maxLength: 29
             })
             .map((uint8Array) => Principal.fromUint8Array(uint8Array));
     }
@@ -450,6 +454,15 @@ function getArbitrary(
                 arbitrary.map((value) => ({ [key]: value }))
             )
         );
+    }
+
+    if (type.ServT) {
+        return fc
+            .uint8Array({
+                size: 'max',
+                maxLength: 29
+            })
+            .map((uint8Array) => Principal.fromUint8Array(uint8Array));
     }
 
     throw new Error(`unsupported type: ${JSON.stringify(type)}`);
