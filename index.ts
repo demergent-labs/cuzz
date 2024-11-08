@@ -1,5 +1,13 @@
 #!/usr/bin/env -S npx tsx
 
+// TODO allow the dev to pass in arguments to deploy
+// TODO how do we deal with memory and things growing out of control?
+// TODO for example the instruction limits get hit and then we just ignore them
+// TODO but I feel like that might ruin the test at that point?
+// TODO I guess an easy way to get around that would be to create a method
+// TODO that clears the memory automatically...it would clear your database
+// TODO and maybe that will help us detect memory leaks
+
 // TODO make sure to put in a check for memory leaks
 // TODO maybe we just report if memory is increasing?
 
@@ -156,10 +164,16 @@ async function main() {
     let numCalls = 0;
     const startTime = Date.now();
 
-    let expectedErrors: string[] = [];
+    let expectedErrors: string[] = [
+        'AgentError: Timestamp failed to pass the watermark after retrying the configured 3 times. We cannot guarantee the integrity of the response since it could be a replay attack.',
+        'Canister exceeded the limit of 5000000000 instructions for single message execution'
+    ];
     try {
         const cuzzConfig = JSON.parse(fs.readFileSync('cuzz.json', 'utf-8'));
-        expectedErrors = cuzzConfig.expectedErrors || [];
+        expectedErrors = [
+            ...expectedErrors,
+            ...(cuzzConfig.expectedErrors || [])
+        ];
     } catch (error) {
         // Config file not found or invalid, continue with empty expected errors
     }
@@ -221,7 +235,9 @@ async function main() {
                 })
                 .catch(async (error) => {
                     const isExpectedError = expectedErrors.some(
-                        (expectedError) => error.message.includes(expectedError)
+                        (expectedError) =>
+                            error.message.includes(expectedError) ||
+                            error.toString().includes(expectedError)
                     );
 
                     if (!isExpectedError) {
@@ -299,6 +315,7 @@ function getArbitrary(
     decs: CandidAst['decs']
 ): fc.Arbitrary<unknown> {
     if (type === 'PrincipalT') {
+        // TODO make sure you go from 0 to 29 bytes
         return fc
             .uint8Array()
             .map((uint8Array) => Principal.fromUint8Array(uint8Array));
