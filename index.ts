@@ -76,6 +76,7 @@ async function main() {
     program
         .option('--canister-name <name>', `name of the canister`)
         .option('--skip-deploy', 'skip deployment and just get candid')
+        .option('--silent', 'skip logging except for errors')
         .option('--candid-path <path>', 'path to candid file to read from')
         .option(
             '--call-delay <number>',
@@ -88,6 +89,7 @@ async function main() {
     const options = program.opts();
     const canisterName: string = options.canisterName;
     const skipDeploy: boolean = options.skipDeploy ?? false;
+    const silent: boolean = options.silent ?? false;
     const candidPath: string | undefined = options.candidPath;
     const callDelay: number = Number(options.callDelay) * 1_000;
 
@@ -189,6 +191,10 @@ async function main() {
 
             resultAndMemoryUsage(...sampleParams)
                 .then(async ({ result }) => {
+                    if (silent === true) {
+                        return;
+                    }
+
                     const memoryUsageInMegabytes = Number(
                         await memoryActor._azle_memory_usage()
                     );
@@ -222,6 +228,10 @@ async function main() {
                         console.error(error);
                         process.exit(1);
                     } else {
+                        if (silent === true) {
+                            return;
+                        }
+
                         const memoryUsageInMegabytes = Number(
                             await memoryActor._azle_memory_usage()
                         );
