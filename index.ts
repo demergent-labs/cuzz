@@ -1,5 +1,7 @@
 #!/usr/bin/env -S npx tsx
 
+// TODO we may want to fabricate a bunch of cycles...or allow cuzz to do this on the command line
+
 // TODO allow the dev to pass in arguments to deploy
 // TODO how do we deal with memory and things growing out of control?
 // TODO for example the instruction limits get hit and then we just ignore them
@@ -14,6 +16,8 @@
 // TODO I think the user should just have to give the port and the canister name or id
 // TODO and then cuzz can just directly ask the replica for the Candid file
 // TODO and we can compile that here and get the actor
+
+// TODO once we get a candid string generator, we should use that for call_raw and any other test that expects candid strings
 
 import { program } from 'commander';
 import { execSync } from 'child_process';
@@ -166,7 +170,8 @@ async function main() {
 
     let expectedErrors: string[] = [
         'AgentError: Timestamp failed to pass the watermark after retrying the configured 3 times. We cannot guarantee the integrity of the response since it could be a replay attack.',
-        'Canister exceeded the limit of 5000000000 instructions for single message execution'
+        'Canister exceeded the limit of 5000000000 instructions for single message execution',
+        'Canister exceeded the limit of 40000000000 instructions for single message execution'
     ];
     try {
         const cuzzConfig = JSON.parse(fs.readFileSync('cuzz.json', 'utf-8'));
@@ -317,12 +322,18 @@ function getArbitrary(
     if (type === 'PrincipalT') {
         // TODO make sure you go from 0 to 29 bytes
         return fc
-            .uint8Array()
+            .uint8Array({
+                size: 'max',
+                maxLength: 2_000_000
+            })
             .map((uint8Array) => Principal.fromUint8Array(uint8Array));
     }
 
     if (type.PrimT === 'Text') {
-        return fc.string();
+        return fc.string({
+            size: 'max',
+            maxLength: 1_000
+        });
     }
 
     if (type.PrimT === 'Nat') {
