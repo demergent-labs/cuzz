@@ -1,0 +1,11 @@
+{
+  "name": "candid-parser-wasm",
+  "version": "0.0.0",
+  "files": [
+    "candid_parser_wasm_bg.wasm",
+    "candid_parser_wasm.js",
+    "candid_parser_wasm.d.ts"
+  ],
+  "main": "candid_parser_wasm.js",
+  "types": "candid_parser_wasm.d.ts"
+}
