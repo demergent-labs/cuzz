@@ -1,5 +1,11 @@
 #!/usr/bin/env -S npx tsx
 
+// TODO should it adaptively grow the input sizes?
+
+// TODO maybe after a certain number of iterations the input sizes should increase?
+
+// TODO when it fails it needs to display the exact inputs
+
 // TODO we may want to fabricate a bunch of cycles...or allow cuzz to do this on the command line
 
 // TODO allow the dev to pass in arguments to deploy
@@ -21,6 +27,16 @@
 
 // TODO for the errors we should probably allow a regex or glob pattern
 
+// TODO should cuzz automatically work for multiple canisters? As in if you don't specify a canister name
+// TODO it will just work for all canisters and allow you to have the terminals or not?
+// TODO right now we have azle test framework orchestrating this stuff
+
+// TODO for memory leaks, maybe we log the change in memory at each step
+// TODO so then you can just look at the final log and see if there was any increase in memory
+// TODO I am thinking we need a way to allow the dev to clear memory...
+// TODO maybe we have an option to fail on any memory increase?
+// TODO or an increase beyond a certain amount?
+
 import { program } from 'commander';
 import { execSync } from 'child_process';
 import { parse_candid, compile_candid } from './candid_parser_wasm/pkg';
@@ -30,6 +46,7 @@ import * as fc from 'fast-check';
 import { Actor, HttpAgent } from '@dfinity/agent';
 
 type CandidPrimitiveType =
+    | 'Bool'
     | 'Text'
     | 'Nat'
     | 'Nat64'
@@ -41,7 +58,9 @@ type CandidPrimitiveType =
     | 'Int32'
     | 'Int16'
     | 'Int8'
-    | 'Null';
+    | 'Null'
+    | 'Float32'
+    | 'Float64';
 
 type CandidType =
     | 'PrincipalT'
@@ -52,6 +71,12 @@ type CandidType =
           RecordT?: Array<{ label: { Named: string }; typ: CandidType }>;
           VariantT?: Array<{ label: { Named: string }; typ: CandidType }>;
           ServT?: CandidMethod[];
+          FuncT?: {
+              modes: string[];
+              args: CandidType[];
+              rets: CandidType[];
+          };
+          OptT?: CandidType;
       };
 
 type CandidFunction = {
@@ -85,6 +110,15 @@ type CandidAst = {
     };
 };
 
+type CuzzConfig = {
+    expectedErrors?: string[];
+    maxLength?: {
+        text?: number;
+        vec?: number;
+        blob?: number;
+    };
+};
+
 main();
 
 async function main() {
@@ -107,6 +141,13 @@ async function main() {
     const silent: boolean = options.silent ?? false;
     const candidPath: string | undefined = options.candidPath;
     const callDelay: number = Number(options.callDelay) * 1_000;
+
+    let cuzzConfig: CuzzConfig = {};
+    try {
+        cuzzConfig = JSON.parse(fs.readFileSync('cuzz.json', 'utf-8'));
+    } catch (error) {
+        // Config file not found or invalid, continue with default config
+    }
 
     const candidService: string = candidPath
         ? fs.readFileSync(candidPath, 'utf-8')
@@ -174,16 +215,12 @@ async function main() {
     let expectedErrors: string[] = [
         'AgentError: Timestamp failed to pass the watermark after retrying the configured 3 times. We cannot guarantee the integrity of the response since it could be a replay attack.',
         'Canister exceeded the limit of 5000000000 instructions for single message execution',
-        'Canister exceeded the limit of 40000000000 instructions for single message execution'
+        'Canister exceeded the limit of 40000000000 instructions for single message execution',
+        'Specified ingress_expiry not within expected range'
     ];
-    try {
-        const cuzzConfig = JSON.parse(fs.readFileSync('cuzz.json', 'utf-8'));
-        expectedErrors = [
-            ...expectedErrors,
-            ...(cuzzConfig.expectedErrors || [])
-        ];
-    } catch (error) {
-        // Config file not found or invalid, continue with empty expected errors
+
+    if (cuzzConfig.expectedErrors) {
+        expectedErrors = [...expectedErrors, ...cuzzConfig.expectedErrors];
     }
 
     while (true) {
@@ -324,6 +361,13 @@ function getArbitrary(
     type: CandidType,
     decs: CandidAst['decs']
 ): fc.Arbitrary<unknown> {
+    let cuzzConfig: CuzzConfig = {};
+    try {
+        cuzzConfig = JSON.parse(fs.readFileSync('cuzz.json', 'utf-8'));
+    } catch (error) {
+        // Config file not found or invalid, continue with default config
+    }
+
     if (type === 'PrincipalT') {
         return fc
             .uint8Array({
@@ -336,8 +380,12 @@ function getArbitrary(
     if (type.PrimT === 'Text') {
         return fc.string({
             size: 'max',
-            maxLength: 1_000
+            maxLength: cuzzConfig.maxLength?.text ?? 100_000
         });
+    }
+
+    if (type.PrimT === 'Bool') {
+        return fc.boolean();
     }
 
     if (type.PrimT === 'Nat') {
@@ -397,6 +445,14 @@ function getArbitrary(
         });
     }
 
+    if (type.PrimT === 'Float32') {
+        return fc.float();
+    }
+
+    if (type.PrimT === 'Float64') {
+        return fc.double();
+    }
+
     if (type.PrimT === 'Null') {
         return fc.constant(null);
     }
@@ -406,12 +462,14 @@ function getArbitrary(
         if (type.VecT.PrimT === 'Nat8') {
             return fc.uint8Array({
                 size: 'max',
-                maxLength: 2_000_000
+                maxLength: cuzzConfig.maxLength?.blob ?? 2_000_000
             });
         }
 
         const elementArbitrary = getArbitrary(type.VecT, decs);
-        return fc.array(elementArbitrary);
+        return fc.array(elementArbitrary, {
+            maxLength: cuzzConfig.maxLength?.vec ?? 100
+        });
     }
 
     if (type.VarT) {
@@ -456,6 +514,14 @@ function getArbitrary(
         );
     }
 
+    if (type.OptT) {
+        const innerArbitrary = getArbitrary(type.OptT, decs);
+        return fc.oneof(
+            fc.constant([]),
+            innerArbitrary.map((value) => [value])
+        );
+    }
+
     if (type.ServT) {
         return fc
             .uint8Array({
@@ -463,6 +529,21 @@ function getArbitrary(
                 maxLength: 29
             })
             .map((uint8Array) => Principal.fromUint8Array(uint8Array));
+    }
+
+    if (type.FuncT) {
+        return fc.tuple(
+            fc
+                .uint8Array({
+                    size: 'max',
+                    maxLength: 29
+                })
+                .map((uint8Array) => Principal.fromUint8Array(uint8Array)),
+            fc.string({
+                size: 'max',
+                maxLength: cuzzConfig.maxLength?.text ?? 100_000
+            })
+        );
     }
 
     throw new Error(`unsupported type: ${JSON.stringify(type)}`);
