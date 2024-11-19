@@ -1,5 +1,7 @@
 #!/usr/bin/env -S npx tsx
 
+// TODO how will we deal with recursive types?
+
 // TODO should it adaptively grow the input sizes?
 
 // TODO maybe after a certain number of iterations the input sizes should increase?
@@ -117,6 +119,8 @@ type CuzzConfig = {
         vec?: number;
         blob?: number;
     };
+    textFilter?: string[];
+    skip?: boolean;
 };
 
 main();
@@ -147,6 +151,10 @@ async function main() {
         cuzzConfig = JSON.parse(fs.readFileSync('cuzz.json', 'utf-8'));
     } catch (error) {
         // Config file not found or invalid, continue with default config
+    }
+
+    if (cuzzConfig.skip === true) {
+        process.exit(0);
     }
 
     const candidService: string = candidPath
@@ -216,7 +224,8 @@ async function main() {
         'AgentError: Timestamp failed to pass the watermark after retrying the configured 3 times. We cannot guarantee the integrity of the response since it could be a replay attack.',
         'Canister exceeded the limit of 5000000000 instructions for single message execution',
         'Canister exceeded the limit of 40000000000 instructions for single message execution',
-        'Specified ingress_expiry not within expected range'
+        'Specified ingress_expiry not within expected range',
+        '429 (Too Many Requests)'
     ];
 
     if (cuzzConfig.expectedErrors) {
@@ -378,10 +387,19 @@ function getArbitrary(
     }
 
     if (type.PrimT === 'Text') {
-        return fc.string({
+        const baseArbitrary = fc.string({
             size: 'max',
             maxLength: cuzzConfig.maxLength?.text ?? 100_000
         });
+
+        if (cuzzConfig.textFilter && cuzzConfig.textFilter.length > 0) {
+            return baseArbitrary.filter(
+                (text) =>
+                    !cuzzConfig.textFilter?.some((word) => text.includes(word))
+            );
+        }
+
+        return baseArbitrary;
     }
 
     if (type.PrimT === 'Bool') {
