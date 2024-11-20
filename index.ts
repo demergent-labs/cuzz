@@ -2,6 +2,8 @@
 
 // TODO how will we deal with recursive types?
 
+// TODO make sure to print the params with the errors
+
 // TODO should it adaptively grow the input sizes?
 
 // TODO maybe after a certain number of iterations the input sizes should increase?
@@ -62,7 +64,9 @@ type CandidPrimitiveType =
     | 'Int8'
     | 'Null'
     | 'Float32'
-    | 'Float64';
+    | 'Float64'
+    | 'Empty'
+    | 'Reserved';
 
 type CandidType =
     | 'PrincipalT'
@@ -225,7 +229,8 @@ async function main() {
         'Canister exceeded the limit of 5000000000 instructions for single message execution',
         'Canister exceeded the limit of 40000000000 instructions for single message execution',
         'Specified ingress_expiry not within expected range',
-        '429 (Too Many Requests)'
+        '429 (Too Many Requests)',
+        '413 (Payload Too Large)'
     ];
 
     if (cuzzConfig.expectedErrors) {
@@ -473,6 +478,14 @@ function getArbitrary(
 
     if (type.PrimT === 'Null') {
         return fc.constant(null);
+    }
+
+    if (type.PrimT === 'Empty') {
+        return fc.constant(undefined);
+    }
+
+    if (type.PrimT === 'Reserved') {
+        return fc.constant(undefined);
     }
 
     if (type.VecT) {
