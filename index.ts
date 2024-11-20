@@ -1,5 +1,9 @@
 #!/usr/bin/env -S npx tsx
 
+// TODO well we should really do the memory usage using dfx I guess...because then it will be universal
+
+// TODO if a canister doesn't have _azle_memory_usage, we need to deal with that situation
+
 // TODO how will we deal with recursive types?
 
 // TODO make sure to print the params with the errors
@@ -230,7 +234,10 @@ async function main() {
         'Canister exceeded the limit of 40000000000 instructions for single message execution',
         'Specified ingress_expiry not within expected range',
         '429 (Too Many Requests)',
-        '413 (Payload Too Large)'
+        '413 (Payload Too Large)',
+        '500 (Internal Server Error)',
+        'TypeError: fetch failed',
+        'timed out waiting to start executing'
     ];
 
     if (cuzzConfig.expectedErrors) {
@@ -268,12 +275,17 @@ async function main() {
                         return;
                     }
 
-                    const memoryUsageInMegabytes = Number(
-                        await memoryActor._azle_memory_usage()
-                    );
-                    const formattedMemoryUsage = `${memoryUsageInMegabytes
-                        .toString()
-                        .replace(/\B(?=(\d{3})+(?!\d))/g, '_')} bytes`;
+                    let formattedMemoryUsage: string;
+                    try {
+                        const memoryUsageInMegabytes = Number(
+                            await memoryActor._azle_memory_usage()
+                        );
+                        formattedMemoryUsage = `${memoryUsageInMegabytes
+                            .toString()
+                            .replace(/\B(?=(\d{3})+(?!\d))/g, '_')} bytes`;
+                    } catch {
+                        formattedMemoryUsage = 'unknown';
+                    }
                     const elapsedTime = (
                         (Date.now() - startTime) /
                         1_000
@@ -308,12 +320,17 @@ async function main() {
                             return;
                         }
 
-                        const memoryUsageInMegabytes = Number(
-                            await memoryActor._azle_memory_usage()
-                        );
-                        const formattedMemoryUsage = `${memoryUsageInMegabytes
-                            .toString()
-                            .replace(/\B(?=(\d{3})+(?!\d))/g, '_')} bytes`;
+                        let formattedMemoryUsage: string;
+                        try {
+                            const memoryUsageInMegabytes = Number(
+                                await memoryActor._azle_memory_usage()
+                            );
+                            formattedMemoryUsage = `${memoryUsageInMegabytes
+                                .toString()
+                                .replace(/\B(?=(\d{3})+(?!\d))/g, '_')} bytes`;
+                        } catch {
+                            formattedMemoryUsage = 'unknown';
+                        }
                         const elapsedTime = (
                             (Date.now() - startTime) /
                             1_000
