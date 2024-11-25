@@ -1,5 +1,7 @@
 #!/usr/bin/env -S npx tsx
 
+// TODO if a canister is going to be skipped, we should print that
+
 // TODO well we should really do the memory usage using dfx I guess...because then it will be universal
 
 // TODO if a canister doesn't have _azle_memory_usage, we need to deal with that situation
@@ -128,7 +130,7 @@ type CuzzConfig = {
         blob?: number;
     };
     textFilter?: string[];
-    skip?: boolean;
+    skip?: boolean | string;
 };
 
 main();
@@ -161,7 +163,13 @@ async function main() {
         // Config file not found or invalid, continue with default config
     }
 
-    if (cuzzConfig.skip === true) {
+    if (cuzzConfig.skip === true || typeof cuzzConfig.skip === 'string') {
+        if (typeof cuzzConfig.skip === 'string') {
+            console.info(`skipping ${canisterName}: ${cuzzConfig.skip}`);
+        } else {
+            console.info(`skipping ${canisterName}`);
+        }
+
         process.exit(0);
     }
 
