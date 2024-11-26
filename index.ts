@@ -80,7 +80,10 @@ type CandidType =
           PrimT?: CandidPrimitiveType;
           VecT?: CandidType;
           VarT?: string;
-          RecordT?: Array<{ label: { Named: string }; typ: CandidType }>;
+          RecordT?: Array<{
+              label: { Named: string } | { Unnamed: number };
+              typ: CandidType;
+          }>;
           VariantT?: Array<{ label: { Named: string }; typ: CandidType }>;
           ServT?: CandidMethod[];
           FuncT?: {
@@ -321,6 +324,10 @@ async function main() {
                     );
 
                     if (!isExpectedError) {
+                        console.error(
+                            'Error occurred with params:',
+                            sampleParams
+                        );
                         console.error(error);
                         process.exit(1);
                     } else {
@@ -537,8 +544,25 @@ function getArbitrary(
     }
 
     if (type.RecordT) {
+        const allUnnamed = type.RecordT.every(
+            (field) => 'Unnamed' in field.label
+        );
+
+        if (allUnnamed) {
+            const tupleArbitraries = type.RecordT.sort(
+                (a, b) =>
+                    (a.label as { Unnamed: number }).Unnamed -
+                    (b.label as { Unnamed: number }).Unnamed
+            ).map((field) => getArbitrary(field.typ, decs));
+
+            return fc.tuple(...tupleArbitraries);
+        }
+
         const recordArbitraries = type.RecordT.map((field) => ({
-            key: field.label.Named,
+            key:
+                'Named' in field.label
+                    ? field.label.Named
+                    : String((field.label as { Unnamed: number }).Unnamed),
             arbitrary: getArbitrary(field.typ, decs)
         }));
 
