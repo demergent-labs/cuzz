@@ -134,6 +134,10 @@ type CuzzConfig = {
     };
     textFilter?: string[];
     skip?: boolean | string;
+    nat64?: {
+        min?: string;
+        max?: string;
+    };
 };
 
 main();
@@ -248,7 +252,8 @@ async function main() {
         '413 (Payload Too Large)',
         '500 (Internal Server Error)',
         'TypeError: fetch failed',
-        'timed out waiting to start executing'
+        'timed out waiting to start executing',
+        'Request timed out after 300000 msec'
     ];
 
     if (cuzzConfig.expectedErrors) {
@@ -451,8 +456,10 @@ function getArbitrary(
 
     if (type.PrimT === 'Nat64') {
         return fc.bigInt({
-            min: 0n,
-            max: 2n ** 64n - 1n
+            min: cuzzConfig.nat64?.min ? BigInt(cuzzConfig.nat64.min) : 0n,
+            max: cuzzConfig.nat64?.max
+                ? BigInt(cuzzConfig.nat64.max)
+                : 2n ** 64n - 1n
         });
     }
 
