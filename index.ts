@@ -253,7 +253,8 @@ async function main() {
         '500 (Internal Server Error)',
         'TypeError: fetch failed',
         'timed out waiting to start executing',
-        'Request timed out after 300000 msec'
+        'Request timed out after 300000 msec',
+        'AgentError: Invalid certificate: Certificate is signed more than 5 minutes in the past'
     ];
 
     if (cuzzConfig.expectedErrors) {
