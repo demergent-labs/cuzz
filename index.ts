@@ -450,7 +450,8 @@ function getArbitrary(
 
     if (type.PrimT === 'Nat') {
         return fc.bigInt({
-            min: 0n
+            min: 0n,
+            max: 2n ** 128n - 1n
         });
     }
 
