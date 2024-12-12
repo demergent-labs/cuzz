@@ -2,8 +2,6 @@
 
 // TODO if a canister is going to be skipped, we should print that
 
-// TODO well we should really do the memory usage using dfx I guess...because then it will be universal
-
 // TODO if a canister doesn't have _azle_memory_usage, we need to deal with that situation
 
 // TODO how will we deal with recursive types?
@@ -269,18 +267,6 @@ async function main() {
         )) {
             const sampleParams = fc.sample(methodArbitrary, 1)[0];
 
-            const memoryActor = Actor.createActor(
-                ({ IDL }) => {
-                    return IDL.Service({
-                        _azle_memory_usage: IDL.Func([], [IDL.Nat64], [])
-                    });
-                },
-                {
-                    agent,
-                    canisterId
-                }
-            );
-
             async function resultAndMemoryUsage(...params: any[]) {
                 numCalls++;
                 return {
@@ -296,12 +282,20 @@ async function main() {
 
                     let formattedMemoryUsage: string;
                     try {
-                        const memoryUsageInMegabytes = Number(
-                            await memoryActor._azle_memory_usage()
+                        const statusOutput = execSync(
+                            `dfx canister status ${canisterName}`,
+                            {
+                                encoding: 'utf-8'
+                            }
                         );
-                        formattedMemoryUsage = `${memoryUsageInMegabytes
-                            .toString()
-                            .replace(/\B(?=(\d{3})+(?!\d))/g, '_')} bytes`;
+                        const memoryMatch = statusOutput.match(
+                            /Memory Size: Nat\((\d+)\)/
+                        );
+                        formattedMemoryUsage = memoryMatch
+                            ? `${Number(memoryMatch[1])
+                                  .toString()
+                                  .replace(/\B(?=(\d{3})+(?!\d))/g, '_')} bytes`
+                            : 'unknown';
                     } catch {
                         formattedMemoryUsage = 'unknown';
                     }
@@ -345,12 +339,23 @@ async function main() {
 
                         let formattedMemoryUsage: string;
                         try {
-                            const memoryUsageInMegabytes = Number(
-                                await memoryActor._azle_memory_usage()
+                            const statusOutput = execSync(
+                                `dfx canister status ${canisterName}`,
+                                {
+                                    encoding: 'utf-8'
+                                }
                             );
-                            formattedMemoryUsage = `${memoryUsageInMegabytes
-                                .toString()
-                                .replace(/\B(?=(\d{3})+(?!\d))/g, '_')} bytes`;
+                            const memoryMatch = statusOutput.match(
+                                /Memory Size: Nat\((\d+)\)/
+                            );
+                            formattedMemoryUsage = memoryMatch
+                                ? `${Number(memoryMatch[1])
+                                      .toString()
+                                      .replace(
+                                          /\B(?=(\d{3})+(?!\d))/g,
+                                          '_'
+                                      )} bytes`
+                                : 'unknown';
                         } catch {
                             formattedMemoryUsage = 'unknown';
                         }
