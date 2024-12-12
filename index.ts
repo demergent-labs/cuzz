@@ -252,6 +252,7 @@ async function main() {
         '429 (Too Many Requests)',
         '413 (Payload Too Large)',
         '500 (Internal Server Error)',
+        '503 (Service Unavailable)',
         'TypeError: fetch failed',
         'timed out waiting to start executing',
         'Request timed out after 300000 msec',
