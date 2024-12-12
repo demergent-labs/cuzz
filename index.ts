@@ -247,6 +247,7 @@ async function main() {
         'AgentError: Timestamp failed to pass the watermark after retrying the configured 3 times. We cannot guarantee the integrity of the response since it could be a replay attack.',
         'Canister exceeded the limit of 5000000000 instructions for single message execution',
         'Canister exceeded the limit of 40000000000 instructions for single message execution',
+        'Canister exceeded the limit of 200000000 instructions for single message execution',
         'Specified ingress_expiry not within expected range',
         '429 (Too Many Requests)',
         '413 (Payload Too Large)',
