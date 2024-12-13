@@ -14,8 +14,6 @@
 
 // TODO when it fails it needs to display the exact inputs
 
-// TODO we may want to fabricate a bunch of cycles...or allow cuzz to do this on the command line
-
 // TODO allow the dev to pass in arguments to deploy
 // TODO how do we deal with memory and things growing out of control?
 // TODO for example the instruction limits get hit and then we just ignore them
@@ -46,7 +44,7 @@
 // TODO or an increase beyond a certain amount?
 
 import { program } from 'commander';
-import { execSync } from 'child_process';
+import { execSync, spawn } from 'child_process';
 import { parse_candid, compile_candid } from './candid_parser_wasm/pkg';
 import { Principal } from '@dfinity/principal';
 import * as fs from 'fs';
@@ -123,8 +121,9 @@ type CandidAst = {
     };
 };
 
-type CuzzConfig = {
+export type CuzzConfig = {
     expectedErrors?: string[];
+    callDelay?: number;
     maxLength?: {
         text?: number;
         vec?: number;
@@ -136,6 +135,7 @@ type CuzzConfig = {
         min?: string;
         max?: string;
     };
+    fabricateCycles?: string;
 };
 
 main();
@@ -150,7 +150,8 @@ async function main() {
             '--call-delay <number>',
             'number of seconds between a set of calls to all canister methods',
             '1'
-        );
+        )
+        .option('--terminal', 'run in new terminal window');
 
     program.parse();
 
@@ -159,11 +160,39 @@ async function main() {
     const skipDeploy: boolean = options.skipDeploy ?? false;
     const silent: boolean = options.silent ?? false;
     const candidPath: string | undefined = options.candidPath;
-    const callDelay: number = Number(options.callDelay) * 1_000;
+    const terminal: boolean = options.terminal ?? false;
+    let callDelay: number = Number(options.callDelay) * 1_000;
+
+    if (terminal === true) {
+        const args = [
+            process.argv[1],
+            ...process.argv.slice(2).filter((arg) => arg !== '--terminal'),
+            ' & exec bash'
+        ];
+
+        let cuzzProcess = spawn(
+            'gnome-terminal',
+            ['--', 'bash', '-c', `${args.join(' ')}`],
+            {
+                stdio: 'inherit'
+            }
+        );
+
+        cuzzProcess.on('exit', (code) => {
+            if (code !== 0) {
+                process.exit(code ?? 1);
+            }
+        });
+
+        return;
+    }
 
     let cuzzConfig: CuzzConfig = {};
     try {
         cuzzConfig = JSON.parse(fs.readFileSync('cuzz.json', 'utf-8'));
+        if (cuzzConfig.callDelay !== undefined) {
+            callDelay = cuzzConfig.callDelay * 1_000;
+        }
     } catch (error) {
         // Config file not found or invalid, continue with default config
     }
@@ -319,6 +348,19 @@ async function main() {
                     console.info(`      result:`, result, '\n');
                 })
                 .catch(async (error) => {
+                    if (
+                        error.message === 'is out of cycles' ||
+                        error.message ===
+                            "is unable to process query calls because it's frozen. Please top up the canister with cycles and try again."
+                    ) {
+                        const cyclesToFabricate =
+                            cuzzConfig.fabricateCycles ?? '100000000000000';
+                        execSync(
+                            `dfx ledger fabricate-cycles --canister ${canisterName} --cycles ${cyclesToFabricate}`
+                        );
+                        return;
+                    }
+
                     const isExpectedError = expectedErrors.some(
                         (expectedError) =>
                             error.message.includes(expectedError) ||
