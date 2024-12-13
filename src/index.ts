@@ -360,3 +360,5 @@ async function getCuzzConfig(): Promise<CuzzConfig> {
         return {};
     }
 }
+
+export { CuzzConfig };
