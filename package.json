@@ -2,8 +2,8 @@
   "name": "cuzz",
   "version": "0.0.0",
   "description": "Fuzz testing for Internet Computer Protocol (ICP) canisters",
-  "main": "index.ts",
-  "bin": "index.ts",
+  "main": "src/index.ts",
+  "bin": "src/index.ts",
   "dependencies": {
     "@dfinity/agent": "^2.1.3",
     "@dfinity/candid": "^2.1.3",
