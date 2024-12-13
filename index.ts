@@ -349,9 +349,10 @@ async function main() {
                 })
                 .catch(async (error) => {
                     if (
-                        error.message === 'is out of cycles' ||
-                        error.message ===
+                        error.message.includes('is out of cycles') ||
+                        error.message.includes(
                             "is unable to process query calls because it's frozen. Please top up the canister with cycles and try again."
+                        )
                     ) {
                         const cyclesToFabricate =
                             cuzzConfig.fabricateCycles ?? '100000000000000';
