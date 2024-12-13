@@ -1,5 +1,6 @@
 export { getBooleanArbitrary } from './boolean';
 export { getFloat32Arbitrary, getFloat64Arbitrary } from './floats';
+export { getFuncArbitrary } from './func';
 export {
     getInt16Arbitrary,
     getInt32Arbitrary,
@@ -14,12 +15,11 @@ export {
     getNat8Arbitrary,
     getNatArbitrary
 } from './nats';
+export { getOptArbitrary } from './opt';
 export { getPrincipalArbitrary } from './principal';
+export { getRecordArbitrary } from './record';
+export { getServiceArbitrary } from './service';
 export { getTextArbitrary } from './text';
 export { getVariableArbitrary } from './variable';
-export { getVecArbitrary } from './vec';
-export { getRecordArbitrary } from './record';
 export { getVariantArbitrary } from './variant';
-export { getOptArbitrary } from './opt';
-export { getServiceArbitrary } from './service';
-export { getFuncArbitrary } from './func';
+export { getVecArbitrary } from './vec';

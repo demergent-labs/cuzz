@@ -1,11 +1,11 @@
 import * as fc from 'fast-check';
 
-import { CandidAst, CandidType, CuzzConfig } from '../../types';
+import { CandidDecs, CandidType, CuzzConfig } from '../../types';
 import { getArgumentArbitrary } from '..';
 
 export function getVecArbitrary(
     cuzzConfig: CuzzConfig,
-    decs: CandidAst['decs'],
+    decs: CandidDecs,
     vecT: CandidType
 ): fc.Arbitrary<Array<any> | Uint8Array> {
     if (typeof vecT === 'object' && 'PrimT' in vecT && vecT.PrimT === 'Nat8') {
@@ -15,7 +15,7 @@ export function getVecArbitrary(
         });
     }
 
-    const elementArbitrary = getArgumentArbitrary(cuzzConfig, vecT, decs);
+    const elementArbitrary = getArgumentArbitrary(cuzzConfig, decs, vecT);
 
     return fc.array(elementArbitrary, {
         maxLength: cuzzConfig.maxLength?.vec ?? 100

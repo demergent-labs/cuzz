@@ -20,6 +20,8 @@ export type CandidAst = {
     }>;
 };
 
+export type CandidDecs = CandidAst['decs'];
+
 type CandidFunction = {
     FuncT: {
         args: CandidType[];

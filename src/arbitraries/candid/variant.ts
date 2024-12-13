@@ -1,17 +1,12 @@
 import * as fc from 'fast-check';
-import {
-    CandidAst,
-    CandidType,
-    CandidTypeNonPrincipal,
-    CuzzConfig
-} from '../../types';
+import { CandidDecs, CandidTypeNonPrincipal, CuzzConfig } from '../../types';
 import { getArgumentArbitrary } from '..';
 
 export function getVariantArbitrary(
     cuzzConfig: CuzzConfig,
-    decs: CandidAst['decs'],
+    decs: CandidDecs,
     variantT: NonNullable<CandidTypeNonPrincipal['VariantT']>
-): fc.Arbitrary<unknown> {
+): fc.Arbitrary<Record<string, unknown | null>> {
     const variantArbitraries = variantT.map((variant) => ({
         key: variant.label.Named,
         arbitrary:
@@ -19,7 +14,7 @@ export function getVariantArbitrary(
             'PrimT' in variant.typ &&
             variant.typ.PrimT === 'Null'
                 ? fc.constant(null)
-                : getArgumentArbitrary(cuzzConfig, variant.typ, decs)
+                : getArgumentArbitrary(cuzzConfig, decs, variant.typ)
     }));
 
     return fc.oneof(
