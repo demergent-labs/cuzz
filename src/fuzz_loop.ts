@@ -29,11 +29,11 @@ export async function fuzzLoop(
         for (const [methodName, argumentsArbitrary] of Object.entries(
             argumentsArbitraries
         )) {
-            await fuzzMethod(
-                cuzzOptions,
-                methodName,
-                argumentsArbitrary,
-                actor
+            // Do not await this call
+            fuzzMethod(cuzzOptions, methodName, argumentsArbitrary, actor);
+
+            await new Promise((resolve) =>
+                setTimeout(resolve, cuzzOptions.callDelay * 1_000)
             );
         }
     }
@@ -48,9 +48,9 @@ async function fuzzMethod(
     const methodArguments = fc.sample(argumentsArbitrary, 1)[0];
 
     try {
-        const result = await actor[methodName](...methodArguments);
-
         state.numCalls++;
+
+        const result = await actor[methodName](...methodArguments);
 
         if (cuzzOptions.silent === false) {
             displayStatus(
@@ -61,7 +61,8 @@ async function fuzzMethod(
             );
         }
     } catch (error: any) {
-        await handleCyclesError(cuzzOptions, error, cuzzOptions.canisterName);
+        // TODO we could declaratize this a bit more
+        handleCyclesError(cuzzOptions, error, cuzzOptions.canisterName);
 
         if (isExpectedError(error, cuzzOptions.expectedErrors) === false) {
             console.error('Error occurred with params:', methodArguments);
@@ -78,10 +79,6 @@ async function fuzzMethod(
             );
         }
     }
-
-    await new Promise((resolve) =>
-        setTimeout(resolve, cuzzOptions.callDelay * 1_000)
-    );
 }
 
 function displayStatus(
@@ -124,11 +121,11 @@ function getFormattedMemoryUsage(canisterName: string): string {
     }
 }
 
-async function handleCyclesError(
+function handleCyclesError(
     cuzzOptions: CuzzOptions,
     error: Error,
     canisterName: string
-): Promise<void> {
+): void {
     const isCyclesError =
         error.message.includes('is out of cycles') ||
         error.message.includes(
