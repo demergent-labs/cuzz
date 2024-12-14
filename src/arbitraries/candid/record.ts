@@ -1,9 +1,10 @@
 import * as fc from 'fast-check';
-import { CandidDecs, CandidTypeNonPrincipal, CuzzConfig } from '../../types';
+
+import { CandidDecs, CandidTypeNonPrincipal, CuzzOptions } from '../../types';
 import { getArgumentArbitrary } from '..';
 
 export function getRecordArbitrary(
-    cuzzConfig: CuzzConfig,
+    cuzzOptions: CuzzOptions,
     decs: CandidDecs,
     recordT: NonNullable<CandidTypeNonPrincipal['RecordT']>
 ): fc.Arbitrary<Record<string, unknown> | unknown[]> {
@@ -16,7 +17,7 @@ export function getRecordArbitrary(
                     (a.label as { Unnamed: number }).Unnamed -
                     (b.label as { Unnamed: number }).Unnamed
             )
-            .map((field) => getArgumentArbitrary(cuzzConfig, decs, field.typ));
+            .map((field) => getArgumentArbitrary(cuzzOptions, decs, field.typ));
 
         return fc.tuple(...tupleArbitraries);
     }
@@ -26,7 +27,7 @@ export function getRecordArbitrary(
             'Named' in field.label
                 ? field.label.Named
                 : String((field.label as { Unnamed: number }).Unnamed),
-        arbitrary: getArgumentArbitrary(cuzzConfig, decs, field.typ)
+        arbitrary: getArgumentArbitrary(cuzzOptions, decs, field.typ)
     }));
 
     return fc.record(

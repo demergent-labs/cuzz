@@ -1,11 +1,12 @@
 import { Principal } from '@dfinity/principal';
 import * as fc from 'fast-check';
-import { CuzzConfig } from '../../types';
+
+import { CuzzOptions } from '../../types';
 import { getPrincipalArbitrary } from './principal';
 import { getTextArbitrary } from './text';
 
 export function getFuncArbitrary(
-    cuzzConfig: CuzzConfig
+    cuzzOptions: CuzzOptions
 ): fc.Arbitrary<[Principal, string]> {
-    return fc.tuple(getPrincipalArbitrary(), getTextArbitrary(cuzzConfig));
+    return fc.tuple(getPrincipalArbitrary(), getTextArbitrary(cuzzOptions));
 }

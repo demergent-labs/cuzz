@@ -30,11 +30,11 @@ import {
     CandidDecs,
     CandidMethod,
     CandidType,
-    CuzzConfig
+    CuzzOptions
 } from '../types';
 
 export function getArgumentArbitraries(
-    cuzzConfig: CuzzConfig,
+    cuzzOptions: CuzzOptions,
     candidAst: CandidAst,
     canisterName: string
 ): Arbitraries {
@@ -46,14 +46,14 @@ export function getArgumentArbitraries(
     }
 
     return getArgumentArbitrariesFromCandidMethods(
-        cuzzConfig,
+        cuzzOptions,
         candidAst.decs,
         candidMethods
     );
 }
 
 function getArgumentArbitrariesFromCandidMethods(
-    cuzzConfig: CuzzConfig,
+    cuzzOptions: CuzzOptions,
     decs: CandidDecs,
     candidMethods: CandidMethod[]
 ): Arbitraries {
@@ -63,7 +63,7 @@ function getArgumentArbitrariesFromCandidMethods(
             const funcType = candidMethod.typ.FuncT;
 
             const argumentArbitraries = funcType.args.map((type) =>
-                getArgumentArbitrary(cuzzConfig, decs, type)
+                getArgumentArbitrary(cuzzOptions, decs, type)
             );
 
             return {
@@ -76,7 +76,7 @@ function getArgumentArbitrariesFromCandidMethods(
 }
 
 export function getArgumentArbitrary(
-    cuzzConfig: CuzzConfig,
+    cuzzOptions: CuzzOptions,
     decs: CandidDecs,
     type: CandidType
 ): fc.Arbitrary<unknown> {
@@ -93,51 +93,51 @@ export function getArgumentArbitrary(
     }
 
     if (type.PrimT === 'Float32') {
-        return getFloat32Arbitrary();
+        return getFloat32Arbitrary(cuzzOptions);
     }
 
     if (type.PrimT === 'Float64') {
-        return getFloat64Arbitrary();
+        return getFloat64Arbitrary(cuzzOptions);
     }
 
     if (type.PrimT === 'Int') {
-        return getIntArbitrary();
+        return getIntArbitrary(cuzzOptions);
     }
 
     if (type.PrimT === 'Int16') {
-        return getInt16Arbitrary();
+        return getInt16Arbitrary(cuzzOptions);
     }
 
     if (type.PrimT === 'Int32') {
-        return getInt32Arbitrary();
+        return getInt32Arbitrary(cuzzOptions);
     }
 
     if (type.PrimT === 'Int64') {
-        return getInt64Arbitrary();
+        return getInt64Arbitrary(cuzzOptions);
     }
 
     if (type.PrimT === 'Int8') {
-        return getInt8Arbitrary();
+        return getInt8Arbitrary(cuzzOptions);
     }
 
     if (type.PrimT === 'Nat') {
-        return getNatArbitrary();
+        return getNatArbitrary(cuzzOptions);
     }
 
     if (type.PrimT === 'Nat16') {
-        return getNat16Arbitrary();
+        return getNat16Arbitrary(cuzzOptions);
     }
 
     if (type.PrimT === 'Nat32') {
-        return getNat32Arbitrary();
+        return getNat32Arbitrary(cuzzOptions);
     }
 
     if (type.PrimT === 'Nat64') {
-        return getNat64Arbitrary(cuzzConfig);
+        return getNat64Arbitrary(cuzzOptions);
     }
 
     if (type.PrimT === 'Nat8') {
-        return getNat8Arbitrary();
+        return getNat8Arbitrary(cuzzOptions);
     }
 
     if (type.PrimT === 'Null') {
@@ -149,19 +149,19 @@ export function getArgumentArbitrary(
     }
 
     if (type.PrimT === 'Text') {
-        return getTextArbitrary(cuzzConfig);
+        return getTextArbitrary(cuzzOptions);
     }
 
     if (type.FuncT !== undefined) {
-        return getFuncArbitrary(cuzzConfig);
+        return getFuncArbitrary(cuzzOptions);
     }
 
     if (type.OptT !== undefined) {
-        return getOptArbitrary(cuzzConfig, decs, type.OptT);
+        return getOptArbitrary(cuzzOptions, decs, type.OptT);
     }
 
     if (type.RecordT !== undefined) {
-        return getRecordArbitrary(cuzzConfig, decs, type.RecordT);
+        return getRecordArbitrary(cuzzOptions, decs, type.RecordT);
     }
 
     if (type.ServT !== undefined) {
@@ -169,15 +169,15 @@ export function getArgumentArbitrary(
     }
 
     if (type.VarT !== undefined) {
-        return getVariableArbitrary(cuzzConfig, decs, type.VarT);
+        return getVariableArbitrary(cuzzOptions, decs, type.VarT);
     }
 
     if (type.VariantT !== undefined) {
-        return getVariantArbitrary(cuzzConfig, decs, type.VariantT);
+        return getVariantArbitrary(cuzzOptions, decs, type.VariantT);
     }
 
     if (type.VecT !== undefined) {
-        return getVecArbitrary(cuzzConfig, decs, type.VecT);
+        return getVecArbitrary(cuzzOptions, decs, type.VecT);
     }
 
     throw new Error(`Unsupported Candid type: ${JSON.stringify(type)}`);

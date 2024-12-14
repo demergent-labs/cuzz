@@ -1,13 +1,14 @@
 import * as fc from 'fast-check';
-import { CandidDecs, CandidType, CuzzConfig } from '../../types';
+
+import { CandidDecs, CandidType, CuzzOptions } from '../../types';
 import { getArgumentArbitrary } from '..';
 
 export function getOptArbitrary(
-    cuzzConfig: CuzzConfig,
+    cuzzOptions: CuzzOptions,
     decs: CandidDecs,
     optT: CandidType
 ): fc.Arbitrary<[] | [unknown]> {
-    const innerArbitrary = getArgumentArbitrary(cuzzConfig, decs, optT);
+    const innerArbitrary = getArgumentArbitrary(cuzzOptions, decs, optT);
 
     return fc.oneof(
         fc.constant<[]>([]),

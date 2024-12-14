@@ -1,22 +1,17 @@
 import * as fc from 'fast-check';
 
-import { CuzzConfig } from '../../types';
+import { CuzzOptions } from '../../types';
 
-export function getTextArbitrary(cuzzConfig: CuzzConfig): fc.Arbitrary<string> {
+export function getTextArbitrary(
+    cuzzOptions: CuzzOptions
+): fc.Arbitrary<string> {
     const baseArbitrary = fc.string({
         size: 'max',
-        maxLength: cuzzConfig.maxLength?.text ?? 100_000
+        maxLength: cuzzOptions.size.text.max,
+        minLength: cuzzOptions.size.text.min
     });
 
-    if (
-        cuzzConfig.textFilter !== undefined &&
-        cuzzConfig.textFilter.length > 0
-    ) {
-        return baseArbitrary.filter(
-            (text) =>
-                !cuzzConfig.textFilter?.some((word) => text.includes(word))
-        );
-    }
-
-    return baseArbitrary;
+    return baseArbitrary.filter(
+        (text) => !cuzzOptions.textFilter.some((word) => text.includes(word))
+    );
 }

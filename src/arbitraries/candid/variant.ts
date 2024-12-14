@@ -1,9 +1,10 @@
 import * as fc from 'fast-check';
-import { CandidDecs, CandidTypeNonPrincipal, CuzzConfig } from '../../types';
+
+import { CandidDecs, CandidTypeNonPrincipal, CuzzOptions } from '../../types';
 import { getArgumentArbitrary } from '..';
 
 export function getVariantArbitrary(
-    cuzzConfig: CuzzConfig,
+    cuzzOptions: CuzzOptions,
     decs: CandidDecs,
     variantT: NonNullable<CandidTypeNonPrincipal['VariantT']>
 ): fc.Arbitrary<Record<string, unknown | null>> {
@@ -14,7 +15,7 @@ export function getVariantArbitrary(
             'PrimT' in variant.typ &&
             variant.typ.PrimT === 'Null'
                 ? fc.constant(null)
-                : getArgumentArbitrary(cuzzConfig, decs, variant.typ)
+                : getArgumentArbitrary(cuzzOptions, decs, variant.typ)
     }));
 
     return fc.oneof(

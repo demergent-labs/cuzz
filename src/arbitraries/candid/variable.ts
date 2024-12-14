@@ -1,10 +1,10 @@
 import * as fc from 'fast-check';
 
-import { CandidDecs, CuzzConfig } from '../../types';
+import { CandidDecs, CuzzOptions } from '../../types';
 import { getArgumentArbitrary } from '..';
 
 export function getVariableArbitrary(
-    cuzzConfig: CuzzConfig,
+    cuzzOptions: CuzzOptions,
     decs: CandidDecs,
     varT: string
 ): fc.Arbitrary<any> {
@@ -14,5 +14,5 @@ export function getVariableArbitrary(
         throw new Error(`Type definition not found for ${varT}`);
     }
 
-    return getArgumentArbitrary(cuzzConfig, decs, typeDef.TypD.typ);
+    return getArgumentArbitrary(cuzzOptions, decs, typeDef.TypD.typ);
 }

@@ -1,33 +1,48 @@
 import * as fc from 'fast-check';
 
-export function getIntArbitrary(): fc.Arbitrary<bigint> {
-    return fc.bigInt();
-}
+import { CuzzOptions } from '../../types';
 
-export function getInt64Arbitrary(): fc.Arbitrary<bigint> {
+export function getIntArbitrary(
+    cuzzOptions: CuzzOptions
+): fc.Arbitrary<bigint> {
     return fc.bigInt({
-        min: -(2n ** 63n),
-        max: 2n ** 63n - 1n
+        max: cuzzOptions.size.int.max,
+        min: cuzzOptions.size.int.min
     });
 }
 
-export function getInt32Arbitrary(): fc.Arbitrary<number> {
-    return fc.integer({
-        min: -(2 ** 31),
-        max: 2 ** 31 - 1
+export function getInt64Arbitrary(
+    cuzzOptions: CuzzOptions
+): fc.Arbitrary<bigint> {
+    return fc.bigInt({
+        max: cuzzOptions.size.int64.max,
+        min: cuzzOptions.size.int64.min
     });
 }
 
-export function getInt16Arbitrary(): fc.Arbitrary<number> {
+export function getInt32Arbitrary(
+    cuzzOptions: CuzzOptions
+): fc.Arbitrary<number> {
     return fc.integer({
-        min: -(2 ** 15),
-        max: 2 ** 15 - 1
+        max: cuzzOptions.size.int32.max,
+        min: cuzzOptions.size.int32.min
     });
 }
 
-export function getInt8Arbitrary(): fc.Arbitrary<number> {
+export function getInt16Arbitrary(
+    cuzzOptions: CuzzOptions
+): fc.Arbitrary<number> {
     return fc.integer({
-        min: -(2 ** 7),
-        max: 2 ** 7 - 1
+        max: cuzzOptions.size.int16.max,
+        min: cuzzOptions.size.int16.min
+    });
+}
+
+export function getInt8Arbitrary(
+    cuzzOptions: CuzzOptions
+): fc.Arbitrary<number> {
+    return fc.integer({
+        max: cuzzOptions.size.int8.max,
+        min: cuzzOptions.size.int8.min
     });
 }

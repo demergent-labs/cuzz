@@ -76,17 +76,150 @@ export type CandidTypeNonPrincipal = {
 
 export type CuzzConfig = {
     callDelay?: number;
+    candidPath?: string;
+    canisterName?: string;
     expectedErrors?: string[];
     fabricateCycles?: string;
-    maxLength?: {
-        blob?: number;
-        text?: number;
-        vec?: number;
+    size?: {
+        blob?: {
+            max?: number;
+            min?: number;
+        };
+        float32?: {
+            max?: number;
+            min?: number;
+        };
+        float64?: {
+            max?: number;
+            min?: number;
+        };
+        int?: {
+            max?: string;
+            min?: string;
+        };
+        int64?: {
+            max?: string;
+            min?: string;
+        };
+        int32?: {
+            max?: number;
+            min?: number;
+        };
+        int16?: {
+            max?: number;
+            min?: number;
+        };
+        int8?: {
+            max?: number;
+            min?: number;
+        };
+        nat?: {
+            max?: string;
+            min?: string;
+        };
+        nat64?: {
+            max?: string;
+            min?: string;
+        };
+        nat32?: {
+            max?: number;
+            min?: number;
+        };
+        nat16?: {
+            max?: number;
+            min?: number;
+        };
+        nat8?: {
+            max?: number;
+            min?: number;
+        };
+        text?: {
+            max?: number;
+            min?: number;
+        };
+        vec?: {
+            max?: number;
+            min?: number;
+        };
     };
-    nat64?: {
-        max?: string;
-        min?: string;
-    };
+    silent?: boolean;
     skip?: boolean | string;
+    skipDeploy?: boolean;
+    terminal?: boolean;
     textFilter?: string[];
+};
+
+export type CuzzOptions = {
+    callDelay: number;
+    candidPath?: string;
+    canisterName: string;
+    expectedErrors: string[];
+    fabricateCycles: string;
+    size: {
+        blob: {
+            max: number;
+            min: number;
+        };
+        float32: {
+            max: number;
+            min: number;
+        };
+        float64: {
+            max: number;
+            min: number;
+        };
+        int: {
+            max?: bigint;
+            min?: bigint;
+        };
+        int64: {
+            max: bigint;
+            min: bigint;
+        };
+        int32: {
+            max: number;
+            min: number;
+        };
+        int16: {
+            max: number;
+            min: number;
+        };
+        int8: {
+            max: number;
+            min: number;
+        };
+        nat: {
+            max?: bigint;
+            min?: bigint;
+        };
+        nat64: {
+            max: bigint;
+            min: bigint;
+        };
+        nat32: {
+            max: number;
+            min: number;
+        };
+        nat16: {
+            max: number;
+            min: number;
+        };
+        nat8: {
+            max: number;
+            min: number;
+        };
+        text: {
+            max: number;
+            min: number;
+        };
+        vec: {
+            max: number;
+            min: number;
+        };
+    };
+    silent: boolean;
+    skip: boolean | string;
+    skipDeploy: boolean;
+    terminal: boolean;
+    textFilter: string[];
 };
