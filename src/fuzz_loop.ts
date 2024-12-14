@@ -81,6 +81,7 @@ async function fuzzMethod(
     }
 }
 
+// TODO let's make this more beautiful
 function displayStatus(
     canisterName: string,
     methodName: string,

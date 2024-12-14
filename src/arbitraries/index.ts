@@ -25,7 +25,7 @@ import {
     getVecArbitrary
 } from './candid';
 import {
-    Arbitraries,
+    ArgumentsArbitraries,
     CandidAst,
     CandidDecs,
     CandidMethod,
@@ -37,7 +37,7 @@ export function getArgumentArbitraries(
     cuzzOptions: CuzzOptions,
     candidAst: CandidAst,
     canisterName: string
-): Arbitraries {
+): ArgumentsArbitraries {
     const candidMethods =
         candidAst.actor.ServT ?? candidAst.actor.ClassT?.[1].ServT;
 
@@ -56,9 +56,12 @@ function getArgumentArbitrariesFromCandidMethods(
     cuzzOptions: CuzzOptions,
     decs: CandidDecs,
     candidMethods: CandidMethod[]
-): Arbitraries {
+): ArgumentsArbitraries {
     return candidMethods.reduce(
-        (acc: Arbitraries, candidMethod: CandidMethod): Arbitraries => {
+        (
+            acc: ArgumentsArbitraries,
+            candidMethod: CandidMethod
+        ): ArgumentsArbitraries => {
             const methodName = candidMethod.id;
             const funcType = candidMethod.typ.FuncT;
 

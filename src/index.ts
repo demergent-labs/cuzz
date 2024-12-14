@@ -77,13 +77,17 @@ function getSkipMessage(cuzzOptions: CuzzOptions): string {
         : `skipping ${cuzzOptions.canisterName}`;
 }
 
+// TODO the terminal isn't working
 function launchTerminal(): void {
-    const filteredArgs = process.argv.filter((arg) => arg !== '--terminal');
-    const terminalCommand = [...filteredArgs, ' & exec bash'].join(' '); // TODO is the exec bash necessary?
+    const args = [
+        process.argv[1],
+        ...process.argv.slice(2).filter((arg) => arg !== '--terminal'),
+        ' & exec bash' // TODO do we need this?
+    ];
 
-    const cuzzProcess = spawn(
+    let cuzzProcess = spawn(
         'gnome-terminal',
-        ['--', 'bash', '-c', terminalCommand],
+        ['--', 'bash', '-c', `${args.join(' ')}`],
         { stdio: 'inherit' }
     );
 
