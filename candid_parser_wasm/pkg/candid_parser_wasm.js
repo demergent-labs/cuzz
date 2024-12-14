@@ -195,10 +195,6 @@ module.exports.__wbg_String_b9412f8799faab3e = function(arg0, arg1) {
     getDataViewMemory0().setInt32(arg0 + 4 * 0, ptr1, true);
 };
 
-module.exports.__wbg_log_f740dc2253ea759b = function(arg0) {
-    console.log(getObject(arg0));
-};
-
 module.exports.__wbg_new_034f913e7636e987 = function() {
     const ret = new Array();
     return addHeapObject(ret);

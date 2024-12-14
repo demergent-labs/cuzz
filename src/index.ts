@@ -22,83 +22,103 @@
 
 import { Actor, HttpAgent } from '@dfinity/agent';
 import { execSync, spawn } from 'child_process';
-import { OptionValues, program } from 'commander';
-import * as fc from 'fast-check';
-import * as fs from 'fs';
 import { readFile } from 'fs/promises';
-import { join } from 'path';
+
+import './global_errors';
 
 import { getArgumentArbitraries } from './arbitraries';
 import {
-    compile_candid,
-    parse_candid
+    compile_candid as compileCandid,
+    parse_candid as parseCandid
 } from '../candid_parser_wasm/pkg/candid_parser_wasm';
-import { CandidAst, CuzzConfig, CuzzOptions } from './types';
-
-const DEFAULT_EXPECTED_ERRORS = [
-    '413 (Payload Too Large)',
-    '429 (Too Many Requests)',
-    '500 (Internal Server Error)',
-    '503 (Service Unavailable)',
-    'AgentError: Invalid certificate: Certificate is signed more than 5 minutes in the past',
-    'AgentError: Timestamp failed to pass the watermark after retrying the configured 3 times. We cannot guarantee the integrity of the response since it could be a replay attack.',
-    'Canister exceeded the limit of 200000000 instructions for single message execution',
-    'Canister exceeded the limit of 40000000000 instructions for single message execution',
-    'Canister exceeded the limit of 5000000000 instructions for single message execution',
-    'Request timed out after 300000 msec',
-    'Specified ingress_expiry not within expected range',
-    'timed out waiting to start executing',
-    'TypeError: fetch failed'
-];
-
-process.on('uncaughtException', (error: Error) => handleUncaughtError(error));
-process.on('unhandledRejection', (reason: any) => handleUncaughtError(reason));
+import { getCuzzOptions } from './cuzz_options';
+import { fuzzLoop } from './fuzz_loop';
+import { CandidAst, CanisterActor, CuzzConfig, CuzzOptions } from './types';
 
 main();
 
 async function main(): Promise<void> {
     const cuzzOptions = await getCuzzOptions();
 
-    const delayMs = cuzzOptions.callDelay * 1_000;
-
-    if (cuzzOptions.terminal) {
-        launchTerminal(process.argv);
-        return;
-    }
-
-    const cuzzConfig = await getCuzzConfig();
-
-    if (cuzzConfig.skip) {
-        const skipMessage =
-            typeof cuzzConfig.skip === 'string'
-                ? `skipping ${cuzzOptions.canisterName}: ${cuzzConfig.skip}`
-                : `skipping ${cuzzOptions.canisterName}`;
-        console.info(skipMessage);
+    if (cuzzOptions.skip === true) {
+        console.info(getSkipMessage(cuzzOptions));
         process.exit(0);
     }
 
-    const candidService = getCandidService(
+    if (cuzzOptions.terminal === true) {
+        launchTerminal();
+        return;
+    }
+
+    if (cuzzOptions.skipDeploy === false) {
+        deploy(cuzzOptions.canisterName);
+    }
+
+    const candidService = await getCandidService(
         cuzzOptions.canisterName,
-        cuzzOptions.skipDeploy,
         cuzzOptions.candidPath
     );
-    console.log('candid:service', candidService);
 
-    const canisterId = execSync(`dfx canister id ${cuzzOptions.canisterName}`, {
-        encoding: 'utf-8'
-    }).trim();
-    const ast: CandidAst = parse_candid(candidService);
-    console.log('ast', JSON.stringify(ast, null, 4));
-
-    const canisterMethodArbitraries = getArgumentArbitraries(
+    const candidAst: CandidAst = parseCandid(candidService);
+    const argumentArbitraries = getArgumentArbitraries(
         cuzzOptions,
-        ast,
+        candidAst,
         cuzzOptions.canisterName
     );
-    console.log('canisterMethodArbitraries', canisterMethodArbitraries);
 
-    const idlString = compile_candid(candidService);
-    console.log('idlString', idlString);
+    const actor = await getActor(cuzzOptions, candidService);
+
+    await fuzzLoop(cuzzOptions, actor, argumentArbitraries);
+}
+
+function getSkipMessage(cuzzOptions: CuzzOptions): string {
+    return typeof cuzzOptions.skip === 'string'
+        ? `skipping ${cuzzOptions.canisterName}: ${cuzzOptions.skip}`
+        : `skipping ${cuzzOptions.canisterName}`;
+}
+
+function launchTerminal(): void {
+    const filteredArgs = process.argv.filter((arg) => arg !== '--terminal');
+    const terminalCommand = [...filteredArgs, ' & exec bash'].join(' '); // TODO is the exec bash necessary?
+
+    const cuzzProcess = spawn(
+        'gnome-terminal',
+        ['--', 'bash', '-c', terminalCommand],
+        { stdio: 'inherit' }
+    );
+
+    cuzzProcess.on('exit', (code) => {
+        if (code !== 0) {
+            process.exit(code ?? 1);
+        }
+    });
+}
+
+// TODO should we allow command line args? Or is the dfx.json args ability enough?
+function deploy(canisterName: string): void {
+    execSync(`dfx deploy ${canisterName} --upgrade-unchanged`, {
+        stdio: 'inherit'
+    });
+}
+
+async function getCandidService(
+    canisterName: string,
+    candidPath?: string
+): Promise<string> {
+    if (candidPath !== undefined) {
+        return await readFile(candidPath, 'utf-8');
+    }
+
+    return execSync(`dfx canister metadata ${canisterName} candid:service`, {
+        encoding: 'utf-8'
+    });
+}
+
+async function getActor(
+    cuzzOptions: CuzzOptions,
+    candidService: string
+): Promise<CanisterActor> {
+    const idlString = compileCandid(candidService);
 
     const normalizedIdlString = idlString
         .replace(/export const idlFactory/g, 'const idlFactory')
@@ -114,325 +134,23 @@ async function main(): Promise<void> {
             console.info(error);
         }
     `);
-    console.log('idlFactory', idlFactory);
 
-    const agent = new HttpAgent({ host: 'http://localhost:8000' });
-    await agent.fetchRootKey();
+    const agent = await HttpAgent.create({
+        host: `http://localhost:${cuzzOptions.port}`,
+        shouldFetchRootKey: true
+    });
+
+    const canisterId = getCanisterId(cuzzOptions.canisterName);
 
     const actor = Actor.createActor(idlFactory, { agent, canisterId });
-    const startTime = Date.now();
-    let numCalls = 0;
 
-    const expectedErrors = [
-        ...DEFAULT_EXPECTED_ERRORS,
-        ...(cuzzConfig.expectedErrors ?? [])
-    ];
-
-    while (true) {
-        for (const [methodName, methodArbitrary] of Object.entries(
-            canisterMethodArbitraries
-        )) {
-            const sampleParams = fc.sample(methodArbitrary, 1)[0];
-
-            try {
-                const { result } = await executeCanisterCall(
-                    actor,
-                    methodName,
-                    sampleParams,
-                    ++numCalls
-                );
-                if (!cuzzOptions.silent) {
-                    displayStatus(
-                        cuzzOptions.canisterName,
-                        startTime,
-                        numCalls,
-                        methodName,
-                        sampleParams,
-                        result
-                    );
-                }
-            } catch (error: any) {
-                await handleCyclesError(
-                    error,
-                    cuzzOptions.canisterName,
-                    cuzzConfig
-                );
-
-                if (!isExpectedError(error, expectedErrors)) {
-                    console.error('Error occurred with params:', sampleParams);
-                    console.error(error);
-                    process.exit(1);
-                } else if (!cuzzOptions.silent) {
-                    displayStatus(
-                        cuzzOptions.canisterName,
-                        startTime,
-                        numCalls,
-                        methodName,
-                        sampleParams,
-                        'expected error'
-                    );
-                }
-            }
-
-            await new Promise((resolve) => setTimeout(resolve, delayMs));
-        }
-    }
+    return actor;
 }
 
-function handleUncaughtError(error: Error): never {
-    const prefix = 'Cuzz Error';
-
-    console.error(`${prefix}: ${error.stack}`);
-
-    process.exit(1);
-}
-
-// TODO should we add all of the CuzzOptions to the CLI options?
-function parseCommandLineOptions(): OptionValues {
-    program
-        .option('--canister-name <name>', 'name of the canister')
-        .option('--skip-deploy', 'skip deployment and just get candid')
-        .option('--silent', 'skip logging except for errors')
-        .option('--candid-path <path>', 'path to candid file to read from')
-        .option(
-            '--call-delay <number>',
-            'number of seconds between a set of calls to all canister methods',
-            '1'
-        )
-        .option('--terminal', 'run in new terminal window');
-
-    program.parse();
-
-    return program.opts();
-}
-
-async function getCuzzOptions(): Promise<CuzzOptions> {
-    const cuzzConfig = await getCuzzConfig();
-
-    const cliOptions: {
-        callDelay?: string;
-        candidPath?: string;
-        canisterName?: string;
-        silent?: boolean;
-        skipDeploy?: boolean;
-        terminal?: boolean;
-    } = parseCommandLineOptions();
-
-    const canisterName = cuzzConfig.canisterName ?? cliOptions.canisterName;
-
-    if (canisterName === undefined) {
-        throw new Error('Canister name is required');
-    }
-
-    return {
-        callDelay: Number(cuzzConfig.callDelay ?? cliOptions.callDelay ?? 1),
-        candidPath: cuzzConfig.candidPath ?? cliOptions.candidPath,
-        canisterName,
-        expectedErrors: [
-            ...DEFAULT_EXPECTED_ERRORS,
-            ...(cuzzConfig.expectedErrors ?? [])
-        ],
-        fabricateCycles: cuzzConfig.fabricateCycles ?? '100000000000000',
-        size: {
-            blob: {
-                max: cuzzConfig.size?.blob?.max ?? 2_000_000,
-                min: cuzzConfig.size?.blob?.min ?? 0
-            },
-            float32: {
-                max: cuzzConfig.size?.float32?.max ?? 3.4e38,
-                min: cuzzConfig.size?.float32?.min ?? -3.4e38
-            },
-            float64: {
-                max: cuzzConfig.size?.float64?.max ?? 1.8e308,
-                min: cuzzConfig.size?.float64?.min ?? -1.8e308
-            },
-            int: {
-                max: cuzzConfig.size?.int?.max
-                    ? BigInt(cuzzConfig.size?.int?.max)
-                    : undefined,
-                min: cuzzConfig.size?.int?.min
-                    ? BigInt(cuzzConfig.size?.int?.min)
-                    : undefined
-            },
-            int64: {
-                max: BigInt(cuzzConfig.size?.int64?.max ?? 2n ** 63n - 1n),
-                min: BigInt(cuzzConfig.size?.int64?.min ?? -(2n ** 63n))
-            },
-            int32: {
-                max: cuzzConfig.size?.int32?.max ?? 2 ** 31 - 1,
-                min: cuzzConfig.size?.int32?.min ?? -(2 ** 31)
-            },
-            int16: {
-                max: cuzzConfig.size?.int16?.max ?? 2 ** 15 - 1,
-                min: cuzzConfig.size?.int16?.min ?? -(2 ** 15)
-            },
-            int8: {
-                max: cuzzConfig.size?.int8?.max ?? 2 ** 7 - 1,
-                min: cuzzConfig.size?.int8?.min ?? -(2 ** 7)
-            },
-            nat: {
-                max: cuzzConfig.size?.nat?.max
-                    ? BigInt(cuzzConfig.size?.nat?.max)
-                    : undefined,
-                min: cuzzConfig.size?.nat?.min
-                    ? BigInt(cuzzConfig.size?.nat?.min)
-                    : undefined
-            },
-            nat64: {
-                max: BigInt(cuzzConfig.size?.nat64?.max ?? 2n ** 64n - 1n),
-                min: BigInt(cuzzConfig.size?.nat64?.min ?? 0n)
-            },
-            nat32: {
-                max: cuzzConfig.size?.nat32?.max ?? 2 ** 32 - 1,
-                min: cuzzConfig.size?.nat32?.min ?? 0
-            },
-            nat16: {
-                max: cuzzConfig.size?.nat16?.max ?? 2 ** 16 - 1,
-                min: cuzzConfig.size?.nat16?.min ?? 0
-            },
-            nat8: {
-                max: cuzzConfig.size?.nat8?.max ?? 2 ** 8 - 1,
-                min: cuzzConfig.size?.nat8?.min ?? 0
-            },
-            text: {
-                max: cuzzConfig.size?.text?.max ?? 100_000,
-                min: cuzzConfig.size?.text?.min ?? 0
-            },
-            vec: {
-                max: cuzzConfig.size?.vec?.max ?? 100,
-                min: cuzzConfig.size?.vec?.min ?? 0
-            }
-        },
-        silent: cuzzConfig.silent ?? cliOptions.silent ?? false,
-        skip: cuzzConfig.skip ?? false,
-        skipDeploy: cuzzConfig.skipDeploy ?? cliOptions.skipDeploy ?? false,
-        terminal: cuzzConfig.terminal ?? cliOptions.terminal ?? false,
-        textFilter: cuzzConfig.textFilter ?? []
-    };
-}
-
-function launchTerminal(args: string[]): void {
-    const filteredArgs = args.filter((arg) => arg !== '--terminal');
-    const terminalCommand = [...filteredArgs, ' & exec bash'].join(' ');
-
-    const cuzzProcess = spawn(
-        'gnome-terminal',
-        ['--', 'bash', '-c', terminalCommand],
-        { stdio: 'inherit' }
-    );
-
-    cuzzProcess.on('exit', (code) => {
-        if (code !== 0) {
-            process.exit(code ?? 1);
-        }
-    });
-}
-
-function getCandidService(
-    canisterName: string,
-    skipDeploy: boolean,
-    candidPath?: string
-): string {
-    if (candidPath) {
-        return fs.readFileSync(candidPath, 'utf-8');
-    }
-
-    if (!skipDeploy) {
-        execSync(`dfx deploy ${canisterName} --upgrade-unchanged`, {
-            stdio: 'inherit'
-        });
-    }
-
-    return execSync(`dfx canister metadata ${canisterName} candid:service`, {
+function getCanisterId(canisterName: string): string {
+    return execSync(`dfx canister id ${canisterName}`, {
         encoding: 'utf-8'
-    });
-}
-
-function getFormattedMemoryUsage(canisterName: string): string {
-    try {
-        const statusOutput = execSync(`dfx canister status ${canisterName}`, {
-            encoding: 'utf-8'
-        });
-        const memoryMatch = statusOutput.match(/Memory Size: Nat\((\d+)\)/);
-        return memoryMatch
-            ? `${Number(memoryMatch[1])
-                  .toString()
-                  .replace(/\B(?=(\d{3})+(?!\d))/g, '_')} bytes`
-            : 'unknown';
-    } catch {
-        return 'unknown';
-    }
-}
-
-function displayStatus(
-    canisterName: string,
-    startTime: number,
-    numCalls: number,
-    methodName: string,
-    params: any[],
-    result: any
-): void {
-    const formattedMemoryUsage = getFormattedMemoryUsage(canisterName);
-    const elapsedTime = ((Date.now() - startTime) / 1_000).toFixed(1);
-
-    console.clear();
-    console.info(`Canister: ${canisterName}\n`);
-    console.info(`Time elapsed: ${elapsedTime}s\n`);
-    console.info(`number of calls: ${numCalls}\n`);
-    console.info(`canister heap memory:`, formattedMemoryUsage, '\n');
-    console.info(`called: ${methodName}\n`);
-    console.info(`      params:`, params);
-    console.info(`      result:`, result, '\n');
-}
-
-async function handleCyclesError(
-    error: Error,
-    canisterName: string,
-    config: CuzzConfig
-): Promise<void> {
-    const isCyclesError =
-        error.message.includes('is out of cycles') ||
-        error.message.includes(
-            "is unable to process query calls because it's frozen"
-        );
-
-    if (isCyclesError) {
-        const cyclesToFabricate = config.fabricateCycles ?? '100000000000000';
-        execSync(
-            `dfx ledger fabricate-cycles --canister ${canisterName} --cycles ${cyclesToFabricate}`
-        );
-    }
-}
-
-function isExpectedError(error: Error, expectedErrors: string[]): boolean {
-    return expectedErrors.some(
-        (expected) =>
-            error.message.includes(expected) ||
-            error.toString().includes(expected)
-    );
-}
-
-async function executeCanisterCall(
-    actor: any,
-    methodName: string,
-    params: any[],
-    numCalls: number
-): Promise<{ result: any }> {
-    return {
-        result: await actor[methodName](...params)
-    };
-}
-
-async function getCuzzConfig(): Promise<CuzzConfig> {
-    try {
-        const cuzzFile = await readFile(
-            join(process.cwd(), 'cuzz.json'),
-            'utf-8'
-        );
-        return JSON.parse(cuzzFile);
-    } catch {
-        return {};
-    }
+    }).trim();
 }
 
 export { CuzzConfig };

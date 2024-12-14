@@ -1,6 +1,8 @@
+import { ActorMethod, ActorSubclass } from '@dfinity/agent';
 import * as fc from 'fast-check';
 
-export type Arbitraries = Record<string, fc.Arbitrary<unknown[]>>;
+export type ArgumentsArbitraries = Record<string, ArgumentsArbitrary>;
+export type ArgumentsArbitrary = fc.Arbitrary<unknown[]>;
 
 export type CandidAst = {
     actor: {
@@ -74,12 +76,17 @@ export type CandidTypeNonPrincipal = {
     VecT?: CandidType;
 };
 
+export type CanisterActor = ActorSubclass<
+    Record<string, ActorMethod<unknown[], unknown>>
+>;
+
 export type CuzzConfig = {
     callDelay?: number;
     candidPath?: string;
     canisterName?: string;
     expectedErrors?: string[];
     fabricateCycles?: string;
+    port?: number;
     size?: {
         blob?: {
             max?: number;
@@ -155,6 +162,7 @@ export type CuzzOptions = {
     canisterName: string;
     expectedErrors: string[];
     fabricateCycles: string;
+    port: number;
     size: {
         blob: {
             max: number;
