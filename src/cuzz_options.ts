@@ -89,9 +89,7 @@ export async function getCuzzOptions(): Promise<CuzzOptions> {
                 max: cuzzConfig.size?.nat?.max
                     ? BigInt(cuzzConfig.size?.nat?.max)
                     : undefined,
-                min: cuzzConfig.size?.nat?.min
-                    ? BigInt(cuzzConfig.size?.nat?.min)
-                    : undefined
+                min: BigInt(cuzzConfig.size?.nat?.min ?? 0n)
             },
             nat64: {
                 max: BigInt(cuzzConfig.size?.nat64?.max ?? 2n ** 64n - 1n),
