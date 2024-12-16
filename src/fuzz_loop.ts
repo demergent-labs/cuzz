@@ -8,10 +8,16 @@ import {
     CuzzOptions
 } from './types';
 
-let state = {
+type State = {
+    numCalls: number;
+    startingMemorySize: number | null;
+    startTime: number | null;
+};
+
+const state: State = {
     numCalls: 0,
-    startingMemorySize: 'unknown',
-    startTime: new Date().getTime()
+    startingMemorySize: null,
+    startTime: null
 };
 
 export async function fuzzLoop(
@@ -20,22 +26,32 @@ export async function fuzzLoop(
     argumentsArbitraries: ArgumentsArbitraries
 ): Promise<void> {
     state.numCalls = 0;
-    state.startingMemorySize = getFormattedMemoryUsage(
-        cuzzOptions.canisterName
-    );
+    state.startingMemorySize = getRawMemorySize(cuzzOptions.canisterName);
     state.startTime = new Date().getTime();
 
     while (true) {
         for (const [methodName, argumentsArbitrary] of Object.entries(
             argumentsArbitraries
         )) {
-            // Do not await this call
+            // We must not await this call in order for the callDelay to work effectively
             fuzzMethod(cuzzOptions, methodName, argumentsArbitrary, actor);
 
             await new Promise((resolve) =>
                 setTimeout(resolve, cuzzOptions.callDelay * 1_000)
             );
         }
+    }
+}
+
+function getRawMemorySize(canisterName: string): number | null {
+    try {
+        const statusOutput = execSync(`dfx canister status ${canisterName}`, {
+            encoding: 'utf-8'
+        });
+        const memoryMatch = statusOutput.match(/Memory Size: Nat\((\d+)\)/);
+        return memoryMatch ? Number(memoryMatch[1]) : null;
+    } catch {
+        return null;
     }
 }
 
@@ -83,7 +99,6 @@ async function fuzzMethod(
     }
 }
 
-// TODO let's make this more beautiful
 function displayStatus(
     canisterName: string,
     methodName: string,
@@ -91,39 +106,47 @@ function displayStatus(
     params: any[],
     result: any
 ): void {
-    const formattedMemoryUsage = getFormattedMemoryUsage(canisterName);
-    const elapsedTime = (
-        (new Date().getTime() - state.startTime) /
-        1_000
-    ).toFixed(1);
+    const currentMemorySize = getRawMemorySize(canisterName);
+    const currentMemorySizeFormatted = formatMemorySize(currentMemorySize);
+
+    const startingMemorySizeFormatted = formatMemorySize(
+        state.startingMemorySize
+    );
+
+    const memoryIncreaseSinceStartingFormatted =
+        state.startingMemorySize !== null && currentMemorySize !== null
+            ? formatMemorySize(currentMemorySize - state.startingMemorySize)
+            : 'unknown';
+
+    const elapsedTime =
+        state.startTime !== null
+            ? ((new Date().getTime() - state.startTime) / 1_000).toFixed(1)
+            : '0.0';
 
     console.clear();
+
     console.info(`Canister: ${canisterName}`);
     console.info(`Method: ${methodName}\n`);
+
     console.info(`Call delay: ${callDelay}s`);
     console.info(`Time elapsed: ${elapsedTime}s`);
     console.info(`Number of calls: ${state.numCalls}\n`);
-    console.info(`Starting memory size:`, state.startingMemorySize);
-    console.info(`Current memory size:`, formattedMemoryUsage, '\n');
-    // TODO I want to add the increase in memory since start
+
+    console.info(`Memory size (starting):`, startingMemorySizeFormatted);
+    console.info(`Memory size (now):`, currentMemorySizeFormatted);
+    console.info(
+        `Memory size (increase since starting):`,
+        memoryIncreaseSinceStartingFormatted,
+        '\n'
+    );
+
     console.info(`      params:`, params);
     console.info(`      result:`, result, '\n');
 }
 
-function getFormattedMemoryUsage(canisterName: string): string {
-    try {
-        const statusOutput = execSync(`dfx canister status ${canisterName}`, {
-            encoding: 'utf-8'
-        });
-        const memoryMatch = statusOutput.match(/Memory Size: Nat\((\d+)\)/);
-        return memoryMatch
-            ? `${Number(memoryMatch[1])
-                  .toString()
-                  .replace(/\B(?=(\d{3})+(?!\d))/g, '_')} bytes`
-            : 'unknown';
-    } catch {
-        return 'unknown';
-    }
+function formatMemorySize(bytes: number | null): string {
+    if (bytes === null) return 'unknown';
+    return `${bytes.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '_')} bytes`;
 }
 
 function handleCyclesError(
