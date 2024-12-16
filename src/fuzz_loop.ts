@@ -100,7 +100,7 @@ function displayStatus(
     console.clear();
     console.info(`Canister: ${canisterName}`);
     console.info(`Method: ${methodName}\n`);
-    console.info(`Call delay: ${callDelay / 1_000}s`);
+    console.info(`Call delay: ${callDelay}s`);
     console.info(`Time elapsed: ${elapsedTime}s`);
     console.info(`Number of calls: ${state.numCalls}\n`);
     console.info(`Starting memory size:`, state.startingMemorySize);
