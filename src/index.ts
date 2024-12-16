@@ -1,7 +1,5 @@
 #!/usr/bin/env -S npx tsx
 
-// TODO: allow console clearing but also full logging of each output
-// TODO: Support regex/glob patterns for expected errors
 // TODO: Implement adaptive input size growth, where the fuzzing starts small and then grows, maybe like every 100 calls or something, have a growth factor...maybe it should be exponential?
 // TODO: study other fuzzing tools and make sure our approach is sound
 // TODO: explain in documentation that single quotes are required for deploy args

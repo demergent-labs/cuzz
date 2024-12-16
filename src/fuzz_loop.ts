@@ -178,9 +178,8 @@ function handleCyclesError(
 }
 
 function isExpectedError(error: Error, expectedErrors: string[]): boolean {
-    return expectedErrors.some(
-        (expected) =>
-            error.message.includes(expected) ||
-            error.toString().includes(expected)
-    );
+    return expectedErrors.some((expected) => {
+        const regex = new RegExp(expected);
+        return regex.test(error.message) || regex.test(error.toString());
+    });
 }
