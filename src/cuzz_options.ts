@@ -54,12 +54,12 @@ export async function getCuzzOptions(): Promise<CuzzOptions> {
                 min: cuzzConfig.size?.blob?.min ?? 0
             },
             float32: {
-                max: cuzzConfig.size?.float32?.max ?? 3.4e38,
-                min: cuzzConfig.size?.float32?.min ?? -3.4e38
+                max: cuzzConfig.size?.float32?.max ?? 3.402823466e38,
+                min: cuzzConfig.size?.float32?.min ?? -3.402823466e38
             },
             float64: {
-                max: cuzzConfig.size?.float64?.max ?? 1.8e308,
-                min: cuzzConfig.size?.float64?.min ?? -1.8e308
+                max: cuzzConfig.size?.float64?.max ?? Number.MAX_VALUE,
+                min: cuzzConfig.size?.float64?.min ?? -Number.MAX_VALUE
             },
             int: {
                 max: cuzzConfig.size?.int?.max
