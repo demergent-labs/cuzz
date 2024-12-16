@@ -33,6 +33,7 @@ export async function getCuzzOptions(): Promise<CuzzOptions> {
         callDelay?: string;
         candidPath?: string;
         canisterName?: string;
+        deployArgs?: string;
         port?: string;
         silent?: boolean;
         skipDeploy?: boolean;
@@ -49,6 +50,7 @@ export async function getCuzzOptions(): Promise<CuzzOptions> {
         callDelay: Number(cuzzConfig.callDelay ?? cliOptions.callDelay ?? 1),
         candidPath: cuzzConfig.candidPath ?? cliOptions.candidPath,
         canisterName,
+        deployArgs: cuzzConfig.deployArgs ?? cliOptions.deployArgs,
         expectedErrors: [
             ...DEFAULT_EXPECTED_ERRORS,
             ...(cuzzConfig.expectedErrors ?? [])
@@ -156,6 +158,10 @@ function parseCommandLineOptions(): OptionValues {
             '1'
         )
         .option('--terminal', 'run in new terminal window')
+        .option(
+            '--deploy-args <string>',
+            'arguments to pass to the deploy command'
+        )
         .option('--port <number>', 'ICP replica port');
 
     program.parse();

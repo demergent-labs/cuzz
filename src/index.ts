@@ -1,11 +1,12 @@
 #!/usr/bin/env -S npx tsx
 
-// TODO: Support deploy arguments
 // TODO: should we allow turning off the default errors?
 // TODO: Support regex/glob patterns for expected errors
 // TODO: Implement adaptive input size growth, where the fuzzing starts small and then grows, maybe like every 100 calls or something, have a growth factor...maybe it should be exponential?
 // TODO: study other fuzzing tools and make sure our approach is sound
 // TODO: allow console clearing but also full logging of each output
+// TODO: make a command to print out the current default errors
+// TODO: explain in documentation that single quotes are required for deploy args
 
 import { Actor, HttpAgent } from '@dfinity/agent';
 import { execSync, spawn } from 'child_process';
@@ -38,7 +39,7 @@ async function main(): Promise<void> {
     }
 
     if (cuzzOptions.skipDeploy === false) {
-        deploy(cuzzOptions.canisterName);
+        deploy(cuzzOptions.canisterName, cuzzOptions.deployArgs);
     }
 
     const candidService = await getCandidService(
@@ -85,9 +86,12 @@ function launchTerminal(): void {
     });
 }
 
-// TODO should we allow command line args? Or is the dfx.json args ability enough?
-function deploy(canisterName: string): void {
-    execSync(`dfx deploy ${canisterName} --upgrade-unchanged`, {
+function deploy(canisterName: string, deployArgs?: string): void {
+    const command = `dfx deploy ${canisterName}${
+        deployArgs !== undefined ? ` --argument '${deployArgs}'` : ''
+    } --upgrade-unchanged`;
+
+    execSync(command, {
         stdio: 'inherit'
     });
 }

@@ -84,6 +84,7 @@ export type CuzzConfig = {
     callDelay?: number;
     candidPath?: string;
     canisterName?: string;
+    deployArgs?: string;
     expectedErrors?: string[];
     fabricateCycles?: string;
     port?: number;
@@ -160,6 +161,7 @@ export type CuzzOptions = {
     callDelay: number;
     candidPath?: string;
     canisterName: string;
+    deployArgs?: string;
     expectedErrors: string[];
     fabricateCycles: string;
     port: number;
