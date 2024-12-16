@@ -8,6 +8,7 @@ import {
     CanisterActor,
     CuzzOptions
 } from './types';
+import { DEFAULT_CYCLES_ERRORS } from './cuzz_options';
 
 type State = {
     numCalls: number;
@@ -79,7 +80,6 @@ async function fuzzMethod(
             );
         }
     } catch (error: any) {
-        // TODO we could declaratize this a bit more
         handleCyclesError(cuzzOptions, error, cuzzOptions.canisterName);
 
         if (isExpectedError(error, cuzzOptions.expectedErrors) === false) {
@@ -94,7 +94,7 @@ async function fuzzMethod(
                 methodName,
                 cuzzOptions.callDelay,
                 methodArguments,
-                'expected error'
+                `expected error: ${error.message}`
             );
         }
     }
@@ -172,11 +172,9 @@ function handleCyclesError(
     error: Error,
     canisterName: string
 ): void {
-    const isCyclesError =
-        error.message.includes('is out of cycles') ||
-        error.message.includes(
-            "is unable to process query calls because it's frozen"
-        );
+    const isCyclesError = DEFAULT_CYCLES_ERRORS.some((cyclesError) =>
+        error.message.includes(cyclesError)
+    );
 
     if (isCyclesError) {
         execSync(

@@ -1,24 +1,11 @@
 #!/usr/bin/env -S npx tsx
 
-// TODO: Implement canister skip logging
-// TODO: Handle recursive type definitions
-// TODO: Implement adaptive input size growth
-// TODO: Consider input size increases after iterations
 // TODO: Support deploy arguments
-// TODO: Manage memory growth and instruction limits
-// TODO: Add memory clearing functionality
-// TODO: Implement memory leak detection
-// TODO: Add memory increase reporting
-// TODO: Simplify to just port and canister name/id inputs
-// TODO: Integrate direct replica Candid file fetching
-// TODO: Use Candid string generator for raw calls
-// TODO: Support regex/glob patterns for errors
-// TODO: Consider multi-canister automation
-// TODO: Migrate from Azle test framework
-// TODO: Track memory changes per step
-// TODO: Add memory clearing option
-// TODO: Implement memory increase thresholds
-// TODO: Memory leak reporting with start/current/increase
+// TODO: should we allow turning off the default errors?
+// TODO: Support regex/glob patterns for expected errors
+// TODO: Implement adaptive input size growth, where the fuzzing starts small and then grows, maybe like every 100 calls or something, have a growth factor...maybe it should be exponential?
+// TODO: study other fuzzing tools and make sure our approach is sound
+// TODO: allow console clearing but also full logging of each output
 
 import { Actor, HttpAgent } from '@dfinity/agent';
 import { execSync, spawn } from 'child_process';

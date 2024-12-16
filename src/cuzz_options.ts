@@ -3,6 +3,11 @@ import { CuzzConfig, CuzzOptions } from './types';
 import { join } from 'path';
 import { OptionValues, program } from 'commander';
 
+export const DEFAULT_CYCLES_ERRORS = [
+    'is out of cycles',
+    "is unable to process query calls because it's frozen"
+];
+
 const DEFAULT_EXPECTED_ERRORS = [
     '413 (Payload Too Large)',
     '429 (Too Many Requests)',
@@ -16,7 +21,9 @@ const DEFAULT_EXPECTED_ERRORS = [
     'Request timed out after 300000 msec',
     'Specified ingress_expiry not within expected range',
     'timed out waiting to start executing',
-    'TypeError: fetch failed'
+    'TypeError: fetch failed',
+    'cannot be larger than 3145728',
+    ...DEFAULT_CYCLES_ERRORS
 ];
 
 export async function getCuzzOptions(): Promise<CuzzOptions> {
