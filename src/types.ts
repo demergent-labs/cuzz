@@ -181,8 +181,8 @@ export type CuzzOptions = {
             min: number;
         };
         int: {
-            max?: bigint;
-            min?: bigint;
+            max: bigint;
+            min: bigint;
         };
         int64: {
             max: bigint;
@@ -201,7 +201,7 @@ export type CuzzOptions = {
             min: number;
         };
         nat: {
-            max?: bigint;
+            max: bigint;
             min: bigint;
         };
         nat64: {
