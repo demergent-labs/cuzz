@@ -56,6 +56,7 @@ async function fuzzMethod(
             displayStatus(
                 cuzzOptions.canisterName,
                 methodName,
+                cuzzOptions.callDelay,
                 methodArguments,
                 result
             );
@@ -74,6 +75,7 @@ async function fuzzMethod(
             displayStatus(
                 cuzzOptions.canisterName,
                 methodName,
+                cuzzOptions.callDelay,
                 methodArguments,
                 'expected error'
             );
@@ -85,6 +87,7 @@ async function fuzzMethod(
 function displayStatus(
     canisterName: string,
     methodName: string,
+    callDelay: number,
     params: any[],
     result: any
 ): void {
@@ -95,13 +98,14 @@ function displayStatus(
     ).toFixed(1);
 
     console.clear();
-    console.info(`Canister: ${canisterName}\n`);
-    console.info(`Time elapsed: ${elapsedTime}s\n`);
-    console.info(`number of calls: ${state.numCalls}\n`);
-    console.info(`starting memory size:`, state.startingMemorySize, '\n');
-    console.info(`current memory size:`, formattedMemoryUsage, '\n');
+    console.info(`Canister: ${canisterName}`);
+    console.info(`Method: ${methodName}\n`);
+    console.info(`Call delay: ${callDelay / 1_000}s`);
+    console.info(`Time elapsed: ${elapsedTime}s`);
+    console.info(`Number of calls: ${state.numCalls}\n`);
+    console.info(`Starting memory size:`, state.startingMemorySize);
+    console.info(`Current memory size:`, formattedMemoryUsage, '\n');
     // TODO I want to add the increase in memory since start
-    console.info(`method called: ${methodName}\n`);
     console.info(`      params:`, params);
     console.info(`      result:`, result, '\n');
 }
