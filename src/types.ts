@@ -84,6 +84,7 @@ export type CuzzConfig = {
     callDelay?: number;
     candidPath?: string;
     canisterName?: string;
+    clearConsole?: boolean;
     deployArgs?: string;
     excludeDefaultExpectedErrors?: boolean;
     expectedErrors?: string[];
@@ -162,6 +163,7 @@ export type CuzzOptions = {
     callDelay: number;
     candidPath?: string;
     canisterName: string;
+    clearConsole: boolean;
     deployArgs?: string;
     excludeDefaultExpectedErrors: boolean;
     expectedErrors: string[];

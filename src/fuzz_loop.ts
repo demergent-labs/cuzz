@@ -71,13 +71,7 @@ async function fuzzMethod(
         const result = await actor[methodName](...methodArguments);
 
         if (cuzzOptions.silent === false) {
-            displayStatus(
-                cuzzOptions.canisterName,
-                methodName,
-                cuzzOptions.callDelay,
-                methodArguments,
-                result
-            );
+            displayStatus(cuzzOptions, methodName, methodArguments, result);
         }
     } catch (error: any) {
         handleCyclesError(cuzzOptions, error, cuzzOptions.canisterName);
@@ -90,9 +84,8 @@ async function fuzzMethod(
 
         if (cuzzOptions.silent === false) {
             displayStatus(
-                cuzzOptions.canisterName,
+                cuzzOptions,
                 methodName,
-                cuzzOptions.callDelay,
                 methodArguments,
                 `expected error: ${error.message}`
             );
@@ -101,13 +94,12 @@ async function fuzzMethod(
 }
 
 function displayStatus(
-    canisterName: string,
+    cuzzOptions: CuzzOptions,
     methodName: string,
-    callDelay: number,
     params: any[],
     result: any
 ): void {
-    const currentMemorySize = getRawMemorySize(canisterName);
+    const currentMemorySize = getRawMemorySize(cuzzOptions.canisterName);
     const currentMemorySizeFormatted = formatMemorySize(currentMemorySize);
 
     const startingMemorySizeFormatted = formatMemorySize(
@@ -124,12 +116,14 @@ function displayStatus(
             ? ((new Date().getTime() - state.startTime) / 1_000).toFixed(1)
             : '0.0';
 
-    console.clear();
+    if (cuzzOptions.clearConsole === true) {
+        console.clear();
+    }
 
-    console.info(`Canister: ${canisterName}`);
+    console.info(`Canister: ${cuzzOptions.canisterName}`);
     console.info(`Method: ${methodName}\n`);
 
-    console.info(`Call delay: ${callDelay}s`);
+    console.info(`Call delay: ${cuzzOptions.callDelay}s`);
     console.info(`Time elapsed: ${elapsedTime}s`);
     console.info(`Number of calls: ${state.numCalls}\n`);
 

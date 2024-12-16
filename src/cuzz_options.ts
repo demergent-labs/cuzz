@@ -33,6 +33,7 @@ export async function getCuzzOptions(): Promise<CuzzOptions> {
         callDelay?: string;
         candidPath?: string;
         canisterName?: string;
+        clearConsole?: boolean;
         deployArgs?: string;
         excludeDefaultExpectedErrors?: boolean;
         port?: string;
@@ -63,6 +64,8 @@ export async function getCuzzOptions(): Promise<CuzzOptions> {
         callDelay: Number(cuzzConfig.callDelay ?? cliOptions.callDelay ?? 1),
         candidPath: cuzzConfig.candidPath ?? cliOptions.candidPath,
         canisterName,
+        clearConsole:
+            cuzzConfig.clearConsole ?? cliOptions.clearConsole ?? false,
         deployArgs: cuzzConfig.deployArgs ?? cliOptions.deployArgs,
         expectedErrors: [
             ...(excludeDefaultExpectedErrors === false
@@ -180,7 +183,8 @@ function parseCommandLineOptions(): OptionValues {
         .option(
             '--print-default-expected-errors',
             'print the default expected errors'
-        );
+        )
+        .option('--clear-console', 'clear console between method calls');
 
     program.parse();
 
