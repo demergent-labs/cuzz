@@ -1,5 +1,6 @@
 import { execSync } from 'child_process';
 import * as fc from 'fast-check';
+import * as util from 'node:util';
 
 import {
     ArgumentsArbitraries,
@@ -140,8 +141,25 @@ function displayStatus(
         '\n'
     );
 
-    console.info(`      params:`, params);
-    console.info(`      result:`, result, '\n');
+    console.info(
+        `      params:`,
+        util.inspect(params, {
+            depth: 5,
+            colors: true,
+            maxArrayLength: 100,
+            maxStringLength: 100
+        })
+    );
+    console.info(
+        `      result:`,
+        util.inspect(result, {
+            depth: 5,
+            colors: true,
+            maxArrayLength: 100,
+            maxStringLength: 100
+        }),
+        '\n'
+    );
 }
 
 function formatMemorySize(bytes: number | null): string {
