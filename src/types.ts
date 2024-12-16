@@ -85,6 +85,7 @@ export type CuzzConfig = {
     candidPath?: string;
     canisterName?: string;
     deployArgs?: string;
+    excludeDefaultExpectedErrors?: boolean;
     expectedErrors?: string[];
     fabricateCycles?: string;
     port?: number;
@@ -162,6 +163,7 @@ export type CuzzOptions = {
     candidPath?: string;
     canisterName: string;
     deployArgs?: string;
+    excludeDefaultExpectedErrors: boolean;
     expectedErrors: string[];
     fabricateCycles: string;
     port: number;

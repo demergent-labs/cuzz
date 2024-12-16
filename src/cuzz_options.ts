@@ -34,11 +34,19 @@ export async function getCuzzOptions(): Promise<CuzzOptions> {
         candidPath?: string;
         canisterName?: string;
         deployArgs?: string;
+        excludeDefaultExpectedErrors?: boolean;
         port?: string;
+        printDefaultExpectedErrors?: boolean;
         silent?: boolean;
         skipDeploy?: boolean;
         terminal?: boolean;
     } = parseCommandLineOptions();
+
+    if (cliOptions.printDefaultExpectedErrors === true) {
+        console.info('Default expected errors:');
+        DEFAULT_EXPECTED_ERRORS.forEach((error) => console.info(`- ${error}`));
+        process.exit(0);
+    }
 
     const canisterName = cuzzConfig.canisterName ?? cliOptions.canisterName;
 
@@ -46,16 +54,24 @@ export async function getCuzzOptions(): Promise<CuzzOptions> {
         throw new Error('Canister name is required');
     }
 
+    const excludeDefaultExpectedErrors =
+        cuzzConfig.excludeDefaultExpectedErrors ??
+        cliOptions.excludeDefaultExpectedErrors ??
+        false;
+
     return {
         callDelay: Number(cuzzConfig.callDelay ?? cliOptions.callDelay ?? 1),
         candidPath: cuzzConfig.candidPath ?? cliOptions.candidPath,
         canisterName,
         deployArgs: cuzzConfig.deployArgs ?? cliOptions.deployArgs,
         expectedErrors: [
-            ...DEFAULT_EXPECTED_ERRORS,
+            ...(excludeDefaultExpectedErrors === false
+                ? DEFAULT_EXPECTED_ERRORS
+                : []),
             ...(cuzzConfig.expectedErrors ?? [])
         ],
         fabricateCycles: cuzzConfig.fabricateCycles ?? '100000000000000',
+        excludeDefaultExpectedErrors,
         port: Number(cuzzConfig.port ?? cliOptions.port ?? 8_000),
         size: {
             blob: {
@@ -162,7 +178,15 @@ function parseCommandLineOptions(): OptionValues {
             '--deploy-args <string>',
             'arguments to pass to the deploy command'
         )
-        .option('--port <number>', 'ICP replica port');
+        .option('--port <number>', 'ICP replica port')
+        .option(
+            '--exclude-default-expected-errors',
+            'exclude the default expected errors'
+        )
+        .option(
+            '--print-default-expected-errors',
+            'print the default expected errors'
+        );
 
     program.parse();
 

@@ -1,11 +1,9 @@
 #!/usr/bin/env -S npx tsx
 
-// TODO: should we allow turning off the default errors?
+// TODO: allow console clearing but also full logging of each output
 // TODO: Support regex/glob patterns for expected errors
 // TODO: Implement adaptive input size growth, where the fuzzing starts small and then grows, maybe like every 100 calls or something, have a growth factor...maybe it should be exponential?
 // TODO: study other fuzzing tools and make sure our approach is sound
-// TODO: allow console clearing but also full logging of each output
-// TODO: make a command to print out the current default errors
 // TODO: explain in documentation that single quotes are required for deploy args
 
 import { Actor, HttpAgent } from '@dfinity/agent';
