@@ -40,7 +40,7 @@ main();
 async function main(): Promise<void> {
     const cuzzOptions = await getCuzzOptions();
 
-    if (cuzzOptions.skip === true) {
+    if (cuzzOptions.skip === true || typeof cuzzOptions.skip === 'string') {
         console.info(getSkipMessage(cuzzOptions));
         process.exit(0);
     }
