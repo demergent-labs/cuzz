@@ -9,10 +9,10 @@ export const DEFAULT_CYCLES_ERRORS = [
 ];
 
 const DEFAULT_EXPECTED_ERRORS = [
-    '413 (Payload Too Large)',
-    '429 (Too Many Requests)',
-    '500 (Internal Server Error)',
-    '503 (Service Unavailable)',
+    '413 \\(Payload Too Large\\)',
+    '429 \\(Too Many Requests\\)',
+    '500 \\(Internal Server Error\\)',
+    '503 \\(Service Unavailable\\)',
     'AgentError: Invalid certificate: Certificate is signed more than 5 minutes in the past',
     'AgentError: Timestamp failed to pass the watermark after retrying the configured 3 times. We cannot guarantee the integrity of the response since it could be a replay attack.',
     'Canister exceeded the limit of 200000000 instructions for single message execution',

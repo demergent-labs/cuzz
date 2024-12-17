@@ -1,6 +1,8 @@
 # cuzz
 
-Fuzz testing for Internet Computer Protocol (ICP) canisters
+Fuzz testing for Internet Computer Protocol (ICP) canisters.
+
+Cuzz is a smart generation-based black-box fuzzer.
 
 ## Prerequisites
 
