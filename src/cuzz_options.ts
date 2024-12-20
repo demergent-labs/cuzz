@@ -160,23 +160,28 @@ async function getCuzzConfig(): Promise<CuzzConfig> {
     }
 }
 
-// TODO should we add all of the CuzzOptions to the CLI options?
 function parseCommandLineOptions(): OptionValues {
     program
-        .option('--canister-name <name>', 'name of the canister')
-        .option('--skip-deploy', 'skip deployment and just get candid')
+        .option('--canister-name <name>', 'name of the canister to fuzz test')
+        .option(
+            '--skip-deploy',
+            'skip deployment of the canister (canister must already be deployed)'
+        )
         .option('--silent', 'skip logging except for errors')
-        .option('--candid-path <path>', 'path to candid file to read from')
+        .option(
+            '--candid-path <path>',
+            'explicitly provide the path to a candid file, instead of relying automatically on the custom candid:service metadata'
+        )
         .option(
             '--call-delay <number>',
-            'number of seconds between a set of calls to all canister methods'
+            'number of seconds (can have decimals) between each canister method fuzz test call'
         )
-        .option('--terminal', 'run in new terminal window')
+        .option('--terminal', 'run the fuzz tests in a new terminal')
         .option(
             '--deploy-args <string>',
-            'arguments to pass to the deploy command'
+            'Candid arguments to pass to the deploy command (same as dfx deploy --argument, but must use single outer quotes)'
         )
-        .option('--port <number>', 'ICP replica port')
+        .option('--port <number>', 'port of the ICP replica to connect to')
         .option(
             '--exclude-default-expected-errors',
             'exclude the default expected errors'
@@ -185,7 +190,10 @@ function parseCommandLineOptions(): OptionValues {
             '--print-default-expected-errors',
             'print the default expected errors'
         )
-        .option('--clear-console', 'clear console between method calls')
+        .option(
+            '--clear-console',
+            'clear the console between method calls for a nicer UX'
+        )
         .option(
             '--time-limit <number>',
             'time limit in minutes (0 means infinite)'
