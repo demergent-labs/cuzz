@@ -41,6 +41,7 @@ export async function getCuzzOptions(): Promise<CuzzOptions> {
         silent?: boolean;
         skipDeploy?: boolean;
         terminal?: boolean;
+        timeLimit?: string;
     } = parseCommandLineOptions();
 
     if (cliOptions.printDefaultExpectedErrors === true) {
@@ -61,7 +62,7 @@ export async function getCuzzOptions(): Promise<CuzzOptions> {
         false;
 
     return {
-        callDelay: Number(cuzzConfig.callDelay ?? cliOptions.callDelay ?? 1),
+        callDelay: Number(cuzzConfig.callDelay ?? cliOptions.callDelay ?? 0.1),
         candidPath: cuzzConfig.candidPath ?? cliOptions.candidPath,
         canisterName,
         clearConsole:
@@ -142,7 +143,8 @@ export async function getCuzzOptions(): Promise<CuzzOptions> {
         skip: cuzzConfig.skip ?? false,
         skipDeploy: cuzzConfig.skipDeploy ?? cliOptions.skipDeploy ?? false,
         terminal: cuzzConfig.terminal ?? cliOptions.terminal ?? false,
-        textFilter: cuzzConfig.textFilter ?? []
+        textFilter: cuzzConfig.textFilter ?? [],
+        timeLimit: Number(cuzzConfig.timeLimit ?? cliOptions.timeLimit ?? 0)
     };
 }
 
@@ -167,8 +169,7 @@ function parseCommandLineOptions(): OptionValues {
         .option('--candid-path <path>', 'path to candid file to read from')
         .option(
             '--call-delay <number>',
-            'number of seconds between a set of calls to all canister methods',
-            '1'
+            'number of seconds between a set of calls to all canister methods'
         )
         .option('--terminal', 'run in new terminal window')
         .option(
@@ -184,7 +185,11 @@ function parseCommandLineOptions(): OptionValues {
             '--print-default-expected-errors',
             'print the default expected errors'
         )
-        .option('--clear-console', 'clear console between method calls');
+        .option('--clear-console', 'clear console between method calls')
+        .option(
+            '--time-limit <number>',
+            'time limit in minutes (0 means infinite)'
+        );
 
     program.parse();
 

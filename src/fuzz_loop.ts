@@ -14,12 +14,14 @@ type State = {
     numCalls: number;
     startingMemorySize: number | null;
     startTime: number | null;
+    endTime: number | null;
 };
 
 const state: State = {
     numCalls: 0,
     startingMemorySize: null,
-    startTime: null
+    startTime: null,
+    endTime: null
 };
 
 export async function fuzzLoop(
@@ -30,8 +32,20 @@ export async function fuzzLoop(
     state.numCalls = 0;
     state.startingMemorySize = getRawMemorySize(cuzzOptions.canisterName);
     state.startTime = new Date().getTime();
+    state.endTime =
+        cuzzOptions.timeLimit === 0
+            ? null
+            : state.startTime + cuzzOptions.timeLimit * 60 * 1_000;
 
     while (true) {
+        if (state.endTime !== null && new Date().getTime() >= state.endTime) {
+            if (cuzzOptions.silent === false) {
+                console.info('\nTime limit reached, exiting successfully...');
+            }
+
+            process.exit(0);
+        }
+
         for (const [methodName, argumentsArbitrary] of Object.entries(
             argumentsArbitraries
         )) {
@@ -116,6 +130,14 @@ function displayStatus(
             ? ((new Date().getTime() - state.startTime) / 1_000).toFixed(1)
             : '0.0';
 
+    const remainingTime =
+        state.endTime !== null
+            ? Math.max(
+                  0,
+                  (state.endTime - new Date().getTime()) / 1_000
+              ).toFixed(1)
+            : '∞';
+
     if (cuzzOptions.clearConsole === true) {
         console.clear();
     }
@@ -125,6 +147,9 @@ function displayStatus(
 
     console.info(`Call delay: ${cuzzOptions.callDelay}s`);
     console.info(`Time elapsed: ${elapsedTime}s`);
+    console.info(
+        `Time remaining: ${remainingTime}${remainingTime === '∞' ? '' : 's'}`
+    );
     console.info(`Number of calls: ${state.numCalls}\n`);
 
     console.info(`Memory size (starting):`, startingMemorySizeFormatted);

@@ -157,6 +157,7 @@ export type CuzzConfig = {
     skipDeploy?: boolean;
     terminal?: boolean;
     textFilter?: string[];
+    timeLimit?: number;
 };
 
 export type CuzzOptions = {
@@ -236,4 +237,5 @@ export type CuzzOptions = {
     skipDeploy: boolean;
     terminal: boolean;
     textFilter: string[];
+    timeLimit: number;
 };

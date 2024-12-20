@@ -1,9 +1,6 @@
 #!/usr/bin/env -S npx tsx
 
-// TODO: study other fuzzing tools and make sure our approach is sound
 // TODO: explain in documentation that single quotes are required for deploy args
-// TODO: I think a memory leak can be detected like this: allow the dev to expose a memory clearing function that will clear the database or data store of the expected memory increases...after resetting that the memory should drop back to the original. If it does not, then we have a memory leak???
-// TODO: should the time limit be implemented here? Right now we are doing it with github actions...but maybe it should be done here? This could help with detecting memory leaks
 
 import { Actor, HttpAgent } from '@dfinity/agent';
 import { execSync, spawn } from 'child_process';
@@ -27,7 +24,7 @@ async function main(): Promise<void> {
 
     if (cuzzOptions.skip === true || typeof cuzzOptions.skip === 'string') {
         console.info(getSkipMessage(cuzzOptions));
-        process.exit(0);
+        return;
     }
 
     if (cuzzOptions.terminal === true) {
@@ -62,7 +59,6 @@ function getSkipMessage(cuzzOptions: CuzzOptions): string {
         : `skipping ${cuzzOptions.canisterName}`;
 }
 
-// TODO the terminal isn't working
 function launchTerminal(): void {
     const args = [
         process.argv[1],
