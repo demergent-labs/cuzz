@@ -28,7 +28,7 @@ It is designed to help discover memory leaks and unexpected traps, crashes, or o
 ## Installation
 
 ```bash
-npm install -g https://github.com/demergent-labs/cuzz
+npm install -g cuzz
 ```
 
 ## Basic usage
