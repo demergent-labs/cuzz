@@ -1,6 +1,6 @@
 # cuzz
 
-`cuzz` is a simple black-box generational fuzzer for locally-deployed Internet Computer Protocol (ICP) canisters.
+`cuzz` is a simple automatic black-box generational fuzzer for locally-deployed Internet Computer Protocol (ICP) canisters.
 
 It is designed to help discover memory leaks and unexpected traps, crashes, or other similar error conditions. Simply point the `cuzz` command-line interface at a local canister and it will generate random arguments to that canister's methods in a configurable loop.
 
