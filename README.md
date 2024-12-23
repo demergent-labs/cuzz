@@ -14,11 +14,11 @@ It is designed to help discover memory leaks and unexpected traps, crashes, or o
     -   [Clear the console](#clear-the-console)
     -   [Call delay](#call-delay)
     -   [Time limit](#time-limit)
+    -   [Cycles](#cycles)
 -   [Traps, crashes, or other similar error conditions](#traps-crashes-or-other-similar-error-conditions)
 -   [Memory leaks](#memory-leaks)
--   [cuzz.json](#cuzzjson)
--   [Cycles](#cycles)
 -   [CLI options](#cli-options)
+-   [cuzz.json](#cuzzjson)
 
 ## Prerequisites
 
@@ -113,6 +113,16 @@ cuzz --canister-name my_very_own_canister --skip-deploy --clear-console --time-l
 cuzz --canister-name my_very_own_canister --skip-deploy --clear-console --time-limit 300
 ```
 
+### Cycles
+
+`cuzz` will automatically fabricate cycles to a canister when it encounters an error due to lack of cycles. You can configure the amount of cycles to fabricate using the `fabricateCycles` property in your `cuzz.json` file:
+
+```json
+{
+    "fabricateCycles": "100000000000000"
+}
+```
+
 ## Traps, crashes, or other similar error conditions
 
 To find traps, crashes, or other similar error conditions, run `cuzz` until its process ends in an unexpected way. Due to the nature of the randomly generated arguments, you will want to filter out expected errors using the `expectedErrors` property in your [`cuzz.json` file](#cuzzjson):
@@ -140,6 +150,23 @@ cuzz --canister-name my_very_own_canister --skip-deploy --clear-console --exclud
 ## Memory leaks
 
 To find memory leaks, run `cuzz` until its process either ends from a canister crashing due to running out of memory, or until you see an unexpected increase in memory size. `cuzz` will print out the starting, current, and increase in memory size in bytes.
+
+## CLI options
+
+| Option                              | Description                                                                                                                                          |
+| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--canister-name <name>`            | (Required) Name of the canister to fuzz test                                                                                                         |
+| `--call-delay <number>`             | Number of seconds (can have decimals) between each canister method fuzz test call. Defaults to 0.1 seconds                                           |
+| `--time-limit <number>`             | Time limit in minutes (0 means infinite). Defaults to infinite                                                                                       |
+| `--clear-console`                   | Clear the console between method calls for a nicer UX, especially useful for real-time memory leak observation                                       |
+| `--candid-path <path>`              | Explicitly provide the path to a candid file, instead of relying automatically on the custom candid:service metadata                                 |
+| `--skip-deploy`                     | Skip deployment of the canister (canister must already be deployed)                                                                                  |
+| `--deploy-args <string>`            | Candid arguments to pass to the deploy command if the canister has init parameters (same as dfx deploy --argument, but must use single outer quotes) |
+| `--silent`                          | Skip logging except for errors                                                                                                                       |
+| `--terminal`                        | Run the fuzz tests in a new terminal, useful for instrumenting cuzz across multiple canisters                                                        |
+| `--port <number>`                   | Port of the ICP replica to connect to. Defaults to 8000                                                                                              |
+| `--print-default-expected-errors`   | Print the default expected errors                                                                                                                    |
+| `--exclude-default-expected-errors` | Exclude the default expected errors                                                                                                                  |
 
 ## cuzz.json
 
@@ -205,30 +232,3 @@ Each size type accepts `min` and `max` properties to override the defaults. For 
     }
 }
 ```
-
-## Cycles
-
-`cuzz` will automatically fabricate cycles to a canister when it encounters an error due to lack of cycles. You can configure the amount of cycles to fabricate using the `fabricateCycles` property in your `cuzz.json` file:
-
-```json
-{
-    "fabricateCycles": "100000000000000"
-}
-```
-
-## CLI options
-
-| Option                              | Description                                                                                                                                          |
-| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `--canister-name <name>`            | (Required) Name of the canister to fuzz test                                                                                                         |
-| `--call-delay <number>`             | Number of seconds (can have decimals) between each canister method fuzz test call. Defaults to 0.1 seconds                                           |
-| `--time-limit <number>`             | Time limit in minutes (0 means infinite). Defaults to infinite                                                                                       |
-| `--clear-console`                   | Clear the console between method calls for a nicer UX, especially useful for real-time memory leak observation                                       |
-| `--candid-path <path>`              | Explicitly provide the path to a candid file, instead of relying automatically on the custom candid:service metadata                                 |
-| `--skip-deploy`                     | Skip deployment of the canister (canister must already be deployed)                                                                                  |
-| `--deploy-args <string>`            | Candid arguments to pass to the deploy command if the canister has init parameters (same as dfx deploy --argument, but must use single outer quotes) |
-| `--silent`                          | Skip logging except for errors                                                                                                                       |
-| `--terminal`                        | Run the fuzz tests in a new terminal, useful for instrumenting cuzz across multiple canisters                                                        |
-| `--port <number>`                   | Port of the ICP replica to connect to. Defaults to 8000                                                                                              |
-| `--print-default-expected-errors`   | Print the default expected errors                                                                                                                    |
-| `--exclude-default-expected-errors` | Exclude the default expected errors                                                                                                                  |
