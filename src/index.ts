@@ -1,7 +1,5 @@
 #!/usr/bin/env -S npx tsx
 
-// TODO: explain in documentation that single quotes are required for deploy args
-
 import { Actor, HttpAgent } from '@dfinity/agent';
 import { execSync, spawn } from 'child_process';
 import { readFile } from 'fs/promises';

@@ -17,7 +17,7 @@ type State = {
     endTime: number | null;
 };
 
-const state: State = {
+let state: State = {
     numCalls: 0,
     startingMemorySize: null,
     startTime: null,

@@ -18,6 +18,7 @@ It is designed to help discover memory leaks and unexpected traps, crashes, or o
 -   [Memory leaks](#memory-leaks)
 -   [cuzz.json](#cuzzjson)
 -   [Cycles](#cycles)
+-   [CLI options](#cli-options)
 
 ## Prerequisites
 
@@ -114,7 +115,7 @@ cuzz --canister-name my_very_own_canister --skip-deploy --clear-console --time-l
 
 ## Traps, crashes, or other similar error conditions
 
-To find traps, crashes, or other similar error conditions, run `cuzz` until its process ends in an unexpected way. Due to the nature of the randomly generated arguments, you will want to filter out expected errors using the `expectedErrors` property in your `cuzz.json` file:
+To find traps, crashes, or other similar error conditions, run `cuzz` until its process ends in an unexpected way. Due to the nature of the randomly generated arguments, you will want to filter out expected errors using the `expectedErrors` property in your [`cuzz.json` file](#cuzzjson):
 
 ```json
 {
@@ -142,9 +143,68 @@ To find memory leaks, run `cuzz` until its process either ends from a canister c
 
 ## cuzz.json
 
-You can create a `cuzz.json` file in the same directory as your canister's `dfx.json` file to configure `cuzz`.
+You can create a `cuzz.json` file in the same directory as your canister's `dfx.json` file to configure `cuzz`. The `cuzz.json` file should contain a single JSON object with your desired configuration options, for example:
 
-To learn about the available configurations, please see [the TypeScript type for `CuzzConfig`](https://github.com/demergent-labs/cuzz/blob/main/src/types.ts#L83).
+```json
+{
+    "canisterName": "my_very_own_canister",
+    "callDelay": 0.1
+}
+```
+
+Here are all the available options in `cuzz.json`:
+
+| Option                         | Type                | Default             | Description                                                          |
+| ------------------------------ | ------------------- | ------------------- | -------------------------------------------------------------------- |
+| `callDelay`                    | `number`            | `0.1`               | Number of seconds between each canister method fuzz test call        |
+| `candidPath`                   | `string`            | `undefined`         | Path to a candid file, instead of relying on candid:service metadata |
+| `canisterName`                 | `string`            | `undefined`         | Name of the canister to fuzz test                                    |
+| `clearConsole`                 | `boolean`           | `false`             | Clear the console between method calls                               |
+| `deployArgs`                   | `string`            | `undefined`         | Arguments to pass to deploy command for canister init                |
+| `excludeDefaultExpectedErrors` | `boolean`           | `false`             | Whether to exclude the default expected errors                       |
+| `expectedErrors`               | `string[]`          | `[]`                | Array of regex patterns for expected errors to ignore                |
+| `fabricateCycles`              | `string`            | `"100000000000000"` | Amount of cycles to fabricate when canister runs out                 |
+| `port`                         | `number`            | `8000`              | Port of the ICP replica to connect to                                |
+| `size`                         | `object`            | See below           | Size constraints for different Candid types                          |
+| `silent`                       | `boolean`           | `false`             | Skip logging except for errors                                       |
+| `skip`                         | `boolean \| string` | `false`             | Skip running the tests                                               |
+| `skipDeploy`                   | `boolean`           | `false`             | Skip deployment of the canister                                      |
+| `terminal`                     | `boolean`           | `false`             | Run tests in new terminal                                            |
+| `textFilter`                   | `string[]`          | `[]`                | Array of strings to filter text values                               |
+| `timeLimit`                    | `number`            | `0`                 | Time limit in minutes (0 means infinite)                             |
+
+The `size` object can contain the following properties to constrain generated values:
+
+| Type      | Default Min | Default Max |
+| --------- | ----------- | ----------- |
+| `blob`    | `0`         | `2_000_000` |
+| `float32` | `-Infinity` | `Infinity`  |
+| `float64` | `-Infinity` | `Infinity`  |
+| `int`     | `-(2^127)`  | `2^127 - 1` |
+| `int64`   | `-(2^63)`   | `2^63 - 1`  |
+| `int32`   | `-(2^31)`   | `2^31 - 1`  |
+| `int16`   | `-(2^15)`   | `2^15 - 1`  |
+| `int8`    | `-(2^7)`    | `2^7 - 1`   |
+| `nat`     | `0`         | `2^128 - 1` |
+| `nat64`   | `0`         | `2^64 - 1`  |
+| `nat32`   | `0`         | `2^32 - 1`  |
+| `nat16`   | `0`         | `2^16 - 1`  |
+| `nat8`    | `0`         | `2^8 - 1`   |
+| `text`    | `0`         | `100_000`   |
+| `vec`     | `0`         | `100`       |
+
+Each size type accepts `min` and `max` properties to override the defaults. For example:
+
+```json
+{
+    "size": {
+        "text": {
+            "min": 0,
+            "max": 100000
+        }
+    }
+}
+```
 
 ## Cycles
 
@@ -155,3 +215,20 @@ To learn about the available configurations, please see [the TypeScript type for
     "fabricateCycles": "100000000000000"
 }
 ```
+
+## CLI options
+
+| Option                              | Description                                                                                                                                          |
+| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--canister-name <name>`            | (Required) Name of the canister to fuzz test                                                                                                         |
+| `--call-delay <number>`             | Number of seconds (can have decimals) between each canister method fuzz test call. Defaults to 0.1 seconds                                           |
+| `--time-limit <number>`             | Time limit in minutes (0 means infinite). Defaults to infinite                                                                                       |
+| `--clear-console`                   | Clear the console between method calls for a nicer UX, especially useful for real-time memory leak observation                                       |
+| `--candid-path <path>`              | Explicitly provide the path to a candid file, instead of relying automatically on the custom candid:service metadata                                 |
+| `--skip-deploy`                     | Skip deployment of the canister (canister must already be deployed)                                                                                  |
+| `--deploy-args <string>`            | Candid arguments to pass to the deploy command if the canister has init parameters (same as dfx deploy --argument, but must use single outer quotes) |
+| `--silent`                          | Skip logging except for errors                                                                                                                       |
+| `--terminal`                        | Run the fuzz tests in a new terminal, useful for instrumenting cuzz across multiple canisters                                                        |
+| `--port <number>`                   | Port of the ICP replica to connect to. Defaults to 8000                                                                                              |
+| `--print-default-expected-errors`   | Print the default expected errors                                                                                                                    |
+| `--exclude-default-expected-errors` | Exclude the default expected errors                                                                                                                  |

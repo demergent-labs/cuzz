@@ -162,41 +162,50 @@ async function getCuzzConfig(): Promise<CuzzConfig> {
 
 function parseCommandLineOptions(): OptionValues {
     program
-        .option('--canister-name <name>', 'name of the canister to fuzz test')
-        .option(
-            '--skip-deploy',
-            'skip deployment of the canister (canister must already be deployed)'
-        )
-        .option('--silent', 'skip logging except for errors')
-        .option(
-            '--candid-path <path>',
-            'explicitly provide the path to a candid file, instead of relying automatically on the custom candid:service metadata'
+        .requiredOption(
+            '--canister-name <name>',
+            '(Required) Name of the canister to fuzz test'
         )
         .option(
             '--call-delay <number>',
-            'number of seconds (can have decimals) between each canister method fuzz test call'
-        )
-        .option('--terminal', 'run the fuzz tests in a new terminal')
-        .option(
-            '--deploy-args <string>',
-            'Candid arguments to pass to the deploy command (same as dfx deploy --argument, but must use single outer quotes)'
-        )
-        .option('--port <number>', 'port of the ICP replica to connect to')
-        .option(
-            '--exclude-default-expected-errors',
-            'exclude the default expected errors'
-        )
-        .option(
-            '--print-default-expected-errors',
-            'print the default expected errors'
-        )
-        .option(
-            '--clear-console',
-            'clear the console between method calls for a nicer UX'
+            'Number of seconds (can have decimals) between each canister method fuzz test call; defaults to 0.1 seconds'
         )
         .option(
             '--time-limit <number>',
-            'time limit in minutes (0 means infinite)'
+            'Time limit in minutes (0 means infinite); defaults to infinite'
+        )
+        .option(
+            '--clear-console',
+            'Clear the console between method calls for a nicer UX, especially useful for real-time memory leak observation'
+        )
+        .option(
+            '--candid-path <path>',
+            'Explicitly provide the path to a candid file, instead of relying automatically on the custom candid:service metadata'
+        )
+        .option(
+            '--skip-deploy',
+            'Skip deployment of the canister (canister must already be deployed)'
+        )
+        .option(
+            '--deploy-args <string>',
+            'Candid arguments to pass to the deploy command if the canister has init parameters (same as dfx deploy --argument, but must use single outer quotes)'
+        )
+        .option('--silent', 'Skip logging except for errors')
+        .option(
+            '--terminal',
+            'Run the fuzz tests in a new terminal, useful for instrumenting cuzz across multiple canisters'
+        )
+        .option(
+            '--port <number>',
+            'Port of the ICP replica to connect to; defaults to 8000'
+        )
+        .option(
+            '--print-default-expected-errors',
+            'Print the default expected errors'
+        )
+        .option(
+            '--exclude-default-expected-errors',
+            'Exclude the default expected errors'
         );
 
     program.parse();
