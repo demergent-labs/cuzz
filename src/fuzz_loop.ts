@@ -64,8 +64,8 @@ function getRawMemorySize(canisterName: string): number | null {
         const statusOutput = execSync(`dfx canister status ${canisterName}`, {
             encoding: 'utf-8'
         });
-        const memoryMatch = statusOutput.match(/Memory Size: Nat\((\d+)\)/);
-        return memoryMatch ? Number(memoryMatch[1]) : null;
+        const memoryMatch = statusOutput.match(/Memory Size: ([\d_]+) Bytes/);
+        return memoryMatch ? Number(memoryMatch[1].replace(/_/g, '')) : null;
     } catch {
         return null;
     }

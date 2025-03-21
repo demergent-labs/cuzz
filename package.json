@@ -1,22 +1,22 @@
 {
-  "name": "cuzz",
-  "version": "0.0.3",
-  "description": "Fuzz testing for Internet Computer Protocol (ICP) canisters",
-  "main": "src/index.ts",
-  "bin": "src/index.ts",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/demergent-labs/cuzz"
-  },
-  "license": "MIT",
-  "dependencies": {
-    "@dfinity/agent": "^2.1.3",
-    "@dfinity/candid": "^2.1.3",
-    "commander": "^12.1.0",
-    "fast-check": "^3.23.1",
-    "tsx": "^4.19.2"
-  },
-  "devDependencies": {
-    "@types/node": "^22.8.4"
-  }
+    "name": "cuzz",
+    "version": "0.0.4",
+    "description": "Fuzz testing for Internet Computer Protocol (ICP) canisters",
+    "main": "src/index.ts",
+    "bin": "src/index.ts",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/demergent-labs/cuzz"
+    },
+    "license": "MIT",
+    "dependencies": {
+        "@dfinity/agent": "^2.1.3",
+        "@dfinity/candid": "^2.1.3",
+        "commander": "^12.1.0",
+        "fast-check": "^3.23.1",
+        "tsx": "^4.19.2"
+    },
+    "devDependencies": {
+        "@types/node": "^22.8.4"
+    }
 }
