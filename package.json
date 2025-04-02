@@ -1,6 +1,6 @@
 {
     "name": "cuzz",
-    "version": "0.0.5",
+    "version": "0.0.6",
     "description": "Fuzz testing for Internet Computer Protocol (ICP) canisters",
     "main": "src/index.ts",
     "bin": "src/index.ts",

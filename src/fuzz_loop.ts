@@ -1,4 +1,4 @@
-import { execSync } from 'child_process';
+import { exec, execSync } from 'child_process';
 import * as fc from 'fast-check';
 import * as util from 'node:util';
 
@@ -9,6 +9,8 @@ import {
     CuzzOptions
 } from './types';
 import { DEFAULT_CYCLES_ERRORS } from './cuzz_options';
+
+const execPromise = util.promisify(exec);
 
 type State = {
     numCalls: number;
@@ -30,7 +32,7 @@ export async function fuzzLoop(
     argumentsArbitraries: ArgumentsArbitraries
 ): Promise<void> {
     state.numCalls = 0;
-    state.startingMemorySize = getRawMemorySize(cuzzOptions.canisterName);
+    state.startingMemorySize = await getRawMemorySize(cuzzOptions.canisterName);
     state.startTime = new Date().getTime();
     state.endTime =
         cuzzOptions.timeLimit === 0
@@ -59,14 +61,14 @@ export async function fuzzLoop(
     }
 }
 
-function getRawMemorySize(canisterName: string): number | null {
+async function getRawMemorySize(canisterName: string): Promise<number | null> {
     try {
-        const statusOutput = execSync(`dfx canister status ${canisterName}`, {
-            encoding: 'utf-8'
-        });
-        const memoryMatch = statusOutput.match(/Memory Size: ([\d_]+) Bytes/);
+        const { stdout } = await execPromise(
+            `dfx canister status ${canisterName}`
+        );
+        const memoryMatch = stdout.match(/Memory Size: ([\d_]+) Bytes/);
         return memoryMatch ? Number(memoryMatch[1].replace(/_/g, '')) : null;
-    } catch {
+    } catch (error) {
         return null;
     }
 }
@@ -107,13 +109,13 @@ async function fuzzMethod(
     }
 }
 
-function displayStatus(
+async function displayStatus(
     cuzzOptions: CuzzOptions,
     methodName: string,
     params: any[],
     result: any
-): void {
-    const currentMemorySize = getRawMemorySize(cuzzOptions.canisterName);
+): Promise<void> {
+    const currentMemorySize = await getRawMemorySize(cuzzOptions.canisterName);
     const currentMemorySizeFormatted = formatMemorySize(currentMemorySize);
 
     const startingMemorySizeFormatted = formatMemorySize(
