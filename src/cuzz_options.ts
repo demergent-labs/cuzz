@@ -76,7 +76,7 @@ export async function getCuzzOptions(): Promise<CuzzOptions> {
         ],
         fabricateCycles: cuzzConfig.fabricateCycles ?? '100000000000000',
         excludeDefaultExpectedErrors,
-        port: Number(cuzzConfig.port ?? cliOptions.port ?? 8_000),
+        port: Number(cuzzConfig.port ?? cliOptions.port ?? 4943),
         size: {
             blob: {
                 max: cuzzConfig.size?.blob?.max ?? 2_000_000,
@@ -197,7 +197,7 @@ function parseCommandLineOptions(): OptionValues {
         )
         .option(
             '--port <number>',
-            'Port of the ICP replica to connect to; defaults to 8000'
+            'Port of the ICP replica to connect to; defaults to 4943'
         )
         .option(
             '--print-default-expected-errors',
