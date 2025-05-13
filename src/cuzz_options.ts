@@ -5,7 +5,8 @@ import { OptionValues, program } from 'commander';
 
 export const DEFAULT_CYCLES_ERRORS = [
     'is out of cycles',
-    "is unable to process query calls because it's frozen"
+    "is unable to process query calls because it's frozen",
+    'insufficient liquid cycles balance'
 ];
 
 const DEFAULT_EXPECTED_ERRORS = [
@@ -74,7 +75,7 @@ export async function getCuzzOptions(): Promise<CuzzOptions> {
                 : []),
             ...(cuzzConfig.expectedErrors ?? [])
         ],
-        fabricateCycles: cuzzConfig.fabricateCycles ?? '100000000000000',
+        fabricateCycles: cuzzConfig.fabricateCycles ?? '1000000000000000',
         excludeDefaultExpectedErrors,
         port: Number(cuzzConfig.port ?? cliOptions.port ?? 4943),
         size: {

@@ -119,7 +119,7 @@ cuzz --canister-name my_very_own_canister --skip-deploy --clear-console --time-l
 
 ```json
 {
-    "fabricateCycles": "100000000000000"
+    "fabricateCycles": "1000000000000000"
 }
 ```
 
