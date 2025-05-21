@@ -26,10 +26,16 @@ const DEFAULT_EXPECTED_ERRORS = [
     'cannot be larger than 3145728',
     'AgentQueryError: Error while making call: Gateway returned an error:',
     'AgentCallError: Error while making call: Gateway returned an error:',
+    'AgentCallError: Error while making call: Server returned an error',
     'AgentQueryError: Error while making call: Timestamp failed to pass the watermark after retrying the configured 3 times. We cannot guarantee the integrity of the response since it could be a replay attack.',
     'AgentCallError: Error while making call: Timestamp failed to pass the watermark after retrying the configured 3 times. We cannot guarantee the integrity of the response since it could be a replay attack.',
+    'AgentReadStateError: Caught exception while attempting to read state: Timestamp failed to pass the watermark after retrying the configured 3 times. We cannot guarantee the integrity of the response since it could be a replay attack.',
     'Failed to apply system changes: Mismatch in cycles balance when resuming an update call',
+    'Failed to apply system changes: Mismatch in cycles balance when resuming a response call',
     'Error: .*.hasOwnProperty is not a function',
+    'field to -> x.hasOwnProperty is not a function',
+    'index .* -> x.hasOwnProperty is not a function',
+    '-> x.hasOwnProperty is not a function',
     'AgentQueryError: Error while making call: fetch failed',
     ...DEFAULT_CYCLES_ERRORS
 ];
