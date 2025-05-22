@@ -97,7 +97,14 @@ async function fuzzMethod(
             console.error(error);
             console.log('####################################################');
             console.log('### This is the actual error #######################');
-            console.log(JSON.stringify(error, null, 2));
+            console.log(
+                JSON.stringify(
+                    error,
+                    (_key, value) =>
+                        typeof value === 'bigint' ? Number(value) : value,
+                    2
+                )
+            );
             console.log('####################################################');
             console.log('====================================================');
             console.log('=== This is the toString of the error ==============');
