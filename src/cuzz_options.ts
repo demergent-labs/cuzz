@@ -38,6 +38,7 @@ const DEFAULT_EXPECTED_ERRORS = [
     'index .* -> x.hasOwnProperty is not a function',
     '-> x.hasOwnProperty is not a function',
     'AgentQueryError: Error while making call: fetch failed',
+    'AgentQueryError: Error while making call: Invalid certificate: Invalid signature from replica signed query: no matching node key found',
     ...DEFAULT_CYCLES_ERRORS
 ];
 
