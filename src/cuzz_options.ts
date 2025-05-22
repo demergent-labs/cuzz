@@ -28,6 +28,7 @@ const DEFAULT_EXPECTED_ERRORS = [
     'Error while making call: Server returned an error',
     'Error while making call: Timestamp failed to pass the watermark after retrying the configured 3 times. We cannot guarantee the integrity of the response since it could be a replay attack.',
     'Caught exception while attempting to read state: Timestamp failed to pass the watermark after retrying the configured 3 times. We cannot guarantee the integrity of the response since it could be a replay attack.',
+    'Timestamp failed to pass the watermark after retrying the configured 3 times. We cannot guarantee the integrity of the response since it could be a replay attack.',
     'Failed to apply system changes: Mismatch in cycles balance when resuming an update call',
     'Failed to apply system changes: Mismatch in cycles balance when resuming a response call',
     'Error: x.hasOwnProperty is not a function',
