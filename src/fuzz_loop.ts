@@ -95,6 +95,24 @@ async function fuzzMethod(
         if (isExpectedError(error, cuzzOptions.expectedErrors) === false) {
             console.error('Error occurred with params:', methodArguments);
             console.error(error);
+            console.log('####################################################');
+            console.log('### This is the actual error #######################');
+            console.log(JSON.stringify(error, null, 2));
+            console.log('####################################################');
+            console.log('====================================================');
+            console.log('=== This is the toString of the error ==============');
+            console.log(error.toString());
+            console.log('====================================================');
+            console.log('----------------------------------------------------');
+            console.log('--- This is the message of the error ---------------');
+            console.log(error.message);
+            console.log('----------------------------------------------------');
+            const expected = new RegExp(
+                'calling msgReject from getRandomnessMsgRejectInReplyCallback'
+            );
+            console.log('Do the regex tests pass?');
+            console.log(expected.test(error.message));
+            console.log(expected.test(error.toString()));
             process.exit(1);
         }
 
