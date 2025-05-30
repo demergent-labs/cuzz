@@ -41,9 +41,15 @@ export async function fuzzLoop(
 
     while (true) {
         if (state.endTime !== null && new Date().getTime() >= state.endTime) {
-            if (cuzzOptions.silent === false) {
-                console.info('\nTime limit reached, exiting successfully...');
-            }
+            console.info('\nTime limit reached, exiting successfully...\n');
+
+            await displayStatus(
+                cuzzOptions,
+                undefined,
+                undefined,
+                undefined,
+                true
+            );
 
             process.exit(0);
         }
@@ -111,9 +117,10 @@ async function fuzzMethod(
 
 async function displayStatus(
     cuzzOptions: CuzzOptions,
-    methodName: string,
-    params: any[],
-    result: any
+    methodName?: string,
+    params?: any[],
+    result?: any,
+    finalStatus: boolean = false
 ): Promise<void> {
     const currentMemorySize = await getRawMemorySize(cuzzOptions.canisterName);
     const currentMemorySizeFormatted = formatMemorySize(currentMemorySize);
@@ -140,12 +147,15 @@ async function displayStatus(
               ).toFixed(1)
             : '∞';
 
-    if (cuzzOptions.clearConsole === true) {
+    if (cuzzOptions.clearConsole === true && finalStatus !== true) {
         console.clear();
     }
 
     console.info(`Canister: ${cuzzOptions.canisterName}`);
-    console.info(`Method: ${methodName}\n`);
+
+    if (finalStatus !== true) {
+        console.info(`Method: ${methodName}\n`);
+    }
 
     console.info(`Call delay: ${cuzzOptions.callDelay}s`);
     console.info(`Time elapsed: ${elapsedTime}s`);
@@ -162,25 +172,27 @@ async function displayStatus(
         '\n'
     );
 
-    console.info(
-        `      params:`,
-        util.inspect(params, {
-            depth: 5,
-            colors: true,
-            maxArrayLength: 100,
-            maxStringLength: 100
-        })
-    );
-    console.info(
-        `      result:`,
-        util.inspect(result, {
-            depth: 5,
-            colors: true,
-            maxArrayLength: 100,
-            maxStringLength: 100
-        }),
-        '\n'
-    );
+    if (finalStatus !== true) {
+        console.info(
+            `      params:`,
+            util.inspect(params, {
+                depth: 5,
+                colors: true,
+                maxArrayLength: 100,
+                maxStringLength: 100
+            })
+        );
+        console.info(
+            `      result:`,
+            util.inspect(result, {
+                depth: 5,
+                colors: true,
+                maxArrayLength: 100,
+                maxStringLength: 100
+            }),
+            '\n'
+        );
+    }
 }
 
 function formatMemorySize(bytes: number | null): string {
