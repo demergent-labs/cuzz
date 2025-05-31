@@ -14,6 +14,7 @@ const DEFAULT_EXPECTED_ERRORS = [
     '429 \\(Too Many Requests\\)',
     '500 \\(Internal Server Error\\)',
     '502 \\(Bad Gateway\\)',
+    '502 Bad Gateway',
     '503 \\(Service Unavailable\\)',
     'Invalid certificate: Certificate is signed more than 5 minutes in the past',
     'Canister exceeded the limit of 200000000 instructions for single message execution',
