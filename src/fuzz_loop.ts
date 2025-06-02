@@ -215,9 +215,12 @@ function handleCyclesError(
                 `dfx ledger fabricate-cycles --canister ${canisterName} --cycles ${cuzzOptions.fabricateCycles}`
             );
         } catch (error: any) {
-            const is502Error = error.message.includes('502 Bad Gateway');
-
-            if (is502Error === true) {
+            // TODO should we just return here? Do we care if errors are ever thrown from the fabricate-cycles command?
+            if (isExpectedError(error, cuzzOptions.expectedErrors) === true) {
+                // It seems that the dfx ledger fabricate-cycles command is prone to many of the
+                // default expected errors, so we will just ignore them if they are found.
+                // The canister should try to fabricate cycles again if a default cycles error is thrown
+                // on subsequent calls.
                 return;
             }
 
@@ -226,6 +229,7 @@ function handleCyclesError(
     }
 }
 
+// TODO so anywhere that we are calling into dfx, we might need to check on the expected errors being thrown
 function isExpectedError(error: Error, expectedErrors: string[]): boolean {
     return expectedErrors.some((expected) => {
         const regex = new RegExp(expected);
