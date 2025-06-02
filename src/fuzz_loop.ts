@@ -210,9 +210,19 @@ function handleCyclesError(
     );
 
     if (isCyclesError) {
-        execSync(
-            `dfx ledger fabricate-cycles --canister ${canisterName} --cycles ${cuzzOptions.fabricateCycles}`
-        );
+        try {
+            execSync(
+                `dfx ledger fabricate-cycles --canister ${canisterName} --cycles ${cuzzOptions.fabricateCycles}`
+            );
+        } catch (error: any) {
+            const is502Error = error.message.includes('502 Bad Gateway');
+
+            if (is502Error === true) {
+                return;
+            }
+
+            throw error;
+        }
     }
 }
 
