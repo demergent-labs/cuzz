@@ -39,6 +39,7 @@ const DEFAULT_EXPECTED_ERRORS = [
     '-> x.hasOwnProperty is not a function',
     'Error while making call: fetch failed',
     'Error while making call: Invalid certificate: Invalid signature from replica signed query: no matching node key found',
+    'Invalid request expiry: Specified ingress_expiry not within expected range',
     ...DEFAULT_CYCLES_ERRORS
 ];
 
