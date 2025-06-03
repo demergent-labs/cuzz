@@ -157,10 +157,11 @@ async function displayStatus(
         console.info(`Method: ${methodName}\n`);
     }
 
-    console.info(`Call delay: ${cuzzOptions.callDelay}s`);
-    console.info(`Time elapsed: ${elapsedTime}s`);
+    console.info(`Call delay: ${cuzzOptions.callDelay} sec`);
+    console.info(`Time limit: ${cuzzOptions.timeLimit} min`);
+    console.info(`Time elapsed: ${elapsedTime} sec`);
     console.info(
-        `Time remaining: ${remainingTime}${remainingTime === '∞' ? '' : 's'}`
+        `Time remaining: ${remainingTime}${remainingTime === '∞' ? '' : 'sec'}`
     );
     console.info(`Number of calls: ${state.numCalls}\n`);
 
@@ -169,7 +170,7 @@ async function displayStatus(
     console.info(
         `Memory size (increase since starting):`,
         memoryIncreaseSinceStartingFormatted,
-        '\n'
+        '\n\n\n\n'
     );
 
     if (finalStatus !== true) {
