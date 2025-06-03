@@ -155,7 +155,6 @@ export type CuzzConfig = {
     silent?: boolean;
     skip?: boolean | string;
     skipDeploy?: boolean;
-    skipGlobalStateChecks?: boolean;
     terminal?: boolean;
     textFilter?: string[];
     timeLimit?: number;
