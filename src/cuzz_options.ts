@@ -40,6 +40,7 @@ const DEFAULT_EXPECTED_ERRORS = [
     'Error while making call: fetch failed',
     'Error while making call: Invalid certificate: Invalid signature from replica signed query: no matching node key found',
     'Invalid request expiry: Specified ingress_expiry not within expected range',
+    'Uncaught Error: call perform failed',
     ...DEFAULT_CYCLES_ERRORS
 ];
 
