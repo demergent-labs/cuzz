@@ -160,6 +160,7 @@ export async function getCuzzOptions(): Promise<CuzzOptions> {
         silent: cuzzConfig.silent ?? cliOptions.silent ?? false,
         skip: cuzzConfig.skip ?? false,
         skipDeploy: cuzzConfig.skipDeploy ?? cliOptions.skipDeploy ?? false,
+        skipMethods: cuzzConfig.skipMethods ?? [],
         terminal: cuzzConfig.terminal ?? cliOptions.terminal ?? false,
         textFilter: cuzzConfig.textFilter ?? [],
         timeLimit: Number(cuzzConfig.timeLimit ?? cliOptions.timeLimit ?? 0)
