@@ -4,6 +4,7 @@
     "description": "Fuzz testing for Internet Computer Protocol (ICP) canisters",
     "main": "src/index.ts",
     "bin": "src/index.ts",
+    "type": "module",
     "repository": {
         "type": "git",
         "url": "https://github.com/demergent-labs/cuzz"
