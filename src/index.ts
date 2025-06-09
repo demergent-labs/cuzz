@@ -1,8 +1,5 @@
 #!/usr/bin/env -S npx tsx
 
-// TODO what if we just pump each canister with a bunch of cycles before the test?
-// TODO I think we should export default errors and in azle we can check against them in the global state checks
-
 import { Actor, HttpAgent } from '@dfinity/agent';
 import { execSync, spawn } from 'child_process';
 import { readFile } from 'fs/promises';
@@ -36,6 +33,14 @@ async function main(): Promise<void> {
     if (cuzzOptions.skipDeploy === false) {
         deploy(cuzzOptions.canisterName, cuzzOptions.deployArgs);
     }
+
+    // A canister under fuzzing will often run out of cycles
+    execSync(
+        `dfx ledger fabricate-cycles --canister ${cuzzOptions.canisterName} --cycles 10000000000000000000000000000`,
+        {
+            stdio: 'inherit'
+        }
+    );
 
     const candidService = await getCandidService(
         cuzzOptions.canisterName,
