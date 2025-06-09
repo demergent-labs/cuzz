@@ -1,5 +1,3 @@
-#!/usr/bin/env -S npx tsx
-
 // TODO we do need to see a displayStatus periodically
 
 import { Actor, HttpAgent } from '@dfinity/agent';
@@ -17,9 +15,7 @@ import { getCuzzOptions } from './cuzz_options';
 import { fuzzLoop } from './fuzz_loop';
 import { CandidAst, CanisterActor, CuzzConfig, CuzzOptions } from './types';
 
-main();
-
-async function main(): Promise<void> {
+export async function main(): Promise<void> {
     const cuzzOptions = await getCuzzOptions();
 
     if (cuzzOptions.skip === true || typeof cuzzOptions.skip === 'string') {
