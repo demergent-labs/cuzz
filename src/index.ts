@@ -1,5 +1,8 @@
 #!/usr/bin/env -S npx tsx
 
+// TODO what if we just pump each canister with a bunch of cycles before the test?
+// TODO I think we should export default errors and in azle we can check against them in the global state checks
+
 import { Actor, HttpAgent } from '@dfinity/agent';
 import { execSync, spawn } from 'child_process';
 import { readFile } from 'fs/promises';
@@ -140,3 +143,4 @@ function getCanisterId(canisterName: string): string {
 }
 
 export { CuzzConfig };
+export { DEFAULT_EXPECTED_ERRORS } from './cuzz_options';

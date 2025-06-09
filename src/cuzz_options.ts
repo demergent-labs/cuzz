@@ -9,7 +9,7 @@ export const DEFAULT_CYCLES_ERRORS = [
     'insufficient liquid cycles balance'
 ];
 
-const DEFAULT_EXPECTED_ERRORS = [
+export const DEFAULT_EXPECTED_ERRORS = [
     '413 \\(Payload Too Large\\)',
     '429 \\(Too Many Requests\\)',
     '500 \\(Internal Server Error\\)',
