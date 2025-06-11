@@ -147,4 +147,4 @@ function getCanisterId(canisterName: string): string {
 
 export { CuzzConfig } from './types';
 export { DEFAULT_EXPECTED_ERRORS } from './cuzz_options';
-export { getRawMemorySize } from './fuzz_loop';
+export { getRawMemorySize, formatMemorySize } from './fuzz_loop';

@@ -198,7 +198,7 @@ async function displayStatus(
     }
 }
 
-function formatMemorySize(bytes: number | null): string {
+export function formatMemorySize(bytes: number | null): string {
     if (bytes === null) return 'unknown';
     return `${bytes.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '_')} bytes`;
 }
