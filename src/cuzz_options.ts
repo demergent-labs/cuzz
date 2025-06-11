@@ -38,6 +38,7 @@ export const DEFAULT_EXPECTED_ERRORS = [
     'Invalid request expiry: Specified ingress_expiry not within expected range',
     'Uncaught Error: call perform failed',
     'byte index \\d+ is not a char boundary',
+    'byte index \\d+ is out of bounds of',
     ...DEFAULT_CYCLES_ERRORS
 ];
 
@@ -89,7 +90,8 @@ export async function getCuzzOptions(): Promise<CuzzOptions> {
                 : []),
             ...(cuzzConfig.expectedErrors ?? [])
         ],
-        fabricateCycles: cuzzConfig.fabricateCycles ?? '1000000000000000',
+        fabricateCycles:
+            cuzzConfig.fabricateCycles ?? '10000000000000000000000000000',
         excludeDefaultExpectedErrors,
         port: Number(cuzzConfig.port ?? cliOptions.port ?? 4943),
         size: {
