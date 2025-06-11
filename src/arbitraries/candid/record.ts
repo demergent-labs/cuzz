@@ -30,13 +30,15 @@ export function getRecordArbitrary(
         arbitrary: getArgumentArbitrary(cuzzOptions, decs, field.typ)
     }));
 
-    return fc.record(
-        recordArbitraries.reduce(
-            (acc, { key, arbitrary }) => ({
-                ...acc,
-                [key]: arbitrary
-            }),
-            {}
+    return fc
+        .record(
+            recordArbitraries.reduce(
+                (acc, { key, arbitrary }) => ({
+                    ...acc,
+                    [key]: arbitrary
+                }),
+                {}
+            )
         )
-    );
+        .map((obj) => Object.assign(Object.create(Object.prototype), obj)); // This ensures the prototype is not null, which was causing x.hasOwnProperty errors
 }
