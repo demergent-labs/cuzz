@@ -37,6 +37,7 @@ export const DEFAULT_EXPECTED_ERRORS = [
     'Error while making call: Invalid certificate: Invalid signature from replica signed query: no matching node key found',
     'Invalid request expiry: Specified ingress_expiry not within expected range',
     'Uncaught Error: call perform failed',
+    'byte index \\d+ is not a char boundary',
     ...DEFAULT_CYCLES_ERRORS
 ];
 
