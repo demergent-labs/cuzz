@@ -67,7 +67,9 @@ export async function fuzzLoop(
     }
 }
 
-async function getRawMemorySize(canisterName: string): Promise<number | null> {
+export async function getRawMemorySize(
+    canisterName: string
+): Promise<number | null> {
     try {
         const { stdout } = await execPromise(
             `dfx canister status ${canisterName}`

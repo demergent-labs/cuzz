@@ -13,7 +13,7 @@ import {
 } from '../candid_parser_wasm/pkg/candid_parser_wasm';
 import { getCuzzOptions } from './cuzz_options';
 import { fuzzLoop } from './fuzz_loop';
-import { CandidAst, CanisterActor, CuzzConfig, CuzzOptions } from './types';
+import { CandidAst, CanisterActor, CuzzOptions } from './types';
 
 export async function main(): Promise<void> {
     const cuzzOptions = await getCuzzOptions();
@@ -145,5 +145,6 @@ function getCanisterId(canisterName: string): string {
     }).trim();
 }
 
-export { CuzzConfig };
+export { CuzzConfig } from './types';
 export { DEFAULT_EXPECTED_ERRORS } from './cuzz_options';
+export { getRawMemorySize } from './fuzz_loop';
