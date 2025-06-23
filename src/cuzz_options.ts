@@ -163,7 +163,7 @@ async function getCuzzConfig(): Promise<CuzzConfig> {
 
 function parseCommandLineOptions(): OptionValues {
     program
-        .requiredOption(
+        .option(
             '--canister-name <name>',
             '(Required) Name of the canister to fuzz test'
         )
