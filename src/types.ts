@@ -89,7 +89,6 @@ export type CuzzConfig = {
     excludeDefaultExpectedErrors?: boolean;
     expectedErrors?: string[];
     fabricateCycles?: string;
-    memoryIncreaseExpected?: boolean;
     port?: number;
     size?: {
         blob?: {
