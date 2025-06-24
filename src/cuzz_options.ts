@@ -9,13 +9,14 @@ export const DEFAULT_CYCLES_ERRORS = [
     'insufficient liquid cycles balance'
 ];
 
-const DEFAULT_EXPECTED_ERRORS = [
+export const DEFAULT_EXPECTED_ERRORS = [
     '413 \\(Payload Too Large\\)',
     '429 \\(Too Many Requests\\)',
     '500 \\(Internal Server Error\\)',
+    '502 \\(Bad Gateway\\)',
+    '502 Bad Gateway',
     '503 \\(Service Unavailable\\)',
-    'AgentError: Invalid certificate: Certificate is signed more than 5 minutes in the past',
-    'AgentError: Timestamp failed to pass the watermark after retrying the configured 3 times. We cannot guarantee the integrity of the response since it could be a replay attack.',
+    'Invalid certificate: Certificate is signed more than 5 minutes in the past',
     'Canister exceeded the limit of 200000000 instructions for single message execution',
     'Canister exceeded the limit of 40000000000 instructions for single message execution',
     'Canister exceeded the limit of 5000000000 instructions for single message execution',
@@ -24,6 +25,20 @@ const DEFAULT_EXPECTED_ERRORS = [
     'timed out waiting to start executing',
     'TypeError: fetch failed',
     'cannot be larger than 3145728',
+    'Error while making call: Gateway returned an error:',
+    'Error while making call: Server returned an error',
+    'Error while making call: Timestamp failed to pass the watermark after retrying the configured 3 times. We cannot guarantee the integrity of the response since it could be a replay attack.',
+    'Caught exception while attempting to read state: Timestamp failed to pass the watermark after retrying the configured 3 times. We cannot guarantee the integrity of the response since it could be a replay attack.',
+    'Timestamp failed to pass the watermark after retrying the configured 3 times. We cannot guarantee the integrity of the response since it could be a replay attack.',
+    'Failed to apply system changes: Mismatch in cycles balance when resuming an update call',
+    'Failed to apply system changes: Mismatch in cycles balance when resuming a response call',
+    'Failed to apply system changes: Mismatch in cycles balance when resuming a replicated query',
+    'Error while making call: fetch failed',
+    'Error while making call: Invalid certificate: Invalid signature from replica signed query: no matching node key found',
+    'Invalid request expiry: Specified ingress_expiry not within expected range',
+    'Uncaught Error: call perform failed',
+    'byte index \\d+ is not a char boundary',
+    'byte index \\d+ is out of bounds of',
     ...DEFAULT_CYCLES_ERRORS
 ];
 
@@ -75,7 +90,8 @@ export async function getCuzzOptions(): Promise<CuzzOptions> {
                 : []),
             ...(cuzzConfig.expectedErrors ?? [])
         ],
-        fabricateCycles: cuzzConfig.fabricateCycles ?? '1000000000000000',
+        fabricateCycles:
+            cuzzConfig.fabricateCycles ?? '10000000000000000000000000000',
         excludeDefaultExpectedErrors,
         port: Number(cuzzConfig.port ?? cliOptions.port ?? 4943),
         size: {
@@ -143,6 +159,7 @@ export async function getCuzzOptions(): Promise<CuzzOptions> {
         silent: cuzzConfig.silent ?? cliOptions.silent ?? false,
         skip: cuzzConfig.skip ?? false,
         skipDeploy: cuzzConfig.skipDeploy ?? cliOptions.skipDeploy ?? false,
+        skipMethods: cuzzConfig.skipMethods ?? [],
         terminal: cuzzConfig.terminal ?? cliOptions.terminal ?? false,
         textFilter: cuzzConfig.textFilter ?? [],
         timeLimit: Number(cuzzConfig.timeLimit ?? cliOptions.timeLimit ?? 0)

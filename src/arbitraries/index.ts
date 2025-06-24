@@ -38,8 +38,12 @@ export function getArgumentArbitraries(
     candidAst: CandidAst,
     canisterName: string
 ): ArgumentsArbitraries {
-    const candidMethods =
-        candidAst.actor.ServT ?? candidAst.actor.ClassT?.[1].ServT;
+    const candidMethods = (
+        candidAst.actor.ServT ?? candidAst.actor.ClassT?.[1].ServT
+    )?.filter(
+        (candidMethod) =>
+            cuzzOptions.skipMethods.includes(candidMethod.id) === false
+    );
 
     if (candidMethods === undefined) {
         throw new Error(`No methods found for canister ${canisterName}`);

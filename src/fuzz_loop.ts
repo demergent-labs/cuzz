@@ -41,9 +41,15 @@ export async function fuzzLoop(
 
     while (true) {
         if (state.endTime !== null && new Date().getTime() >= state.endTime) {
-            if (cuzzOptions.silent === false) {
-                console.info('\nTime limit reached, exiting successfully...');
-            }
+            console.info('\nTime limit reached, exiting successfully...\n');
+
+            await displayStatus(
+                cuzzOptions,
+                undefined,
+                undefined,
+                undefined,
+                true
+            );
 
             process.exit(0);
         }
@@ -61,7 +67,9 @@ export async function fuzzLoop(
     }
 }
 
-async function getRawMemorySize(canisterName: string): Promise<number | null> {
+export async function getRawMemorySize(
+    canisterName: string
+): Promise<number | null> {
     try {
         const { stdout } = await execPromise(
             `dfx canister status ${canisterName}`
@@ -111,9 +119,10 @@ async function fuzzMethod(
 
 async function displayStatus(
     cuzzOptions: CuzzOptions,
-    methodName: string,
-    params: any[],
-    result: any
+    methodName?: string,
+    params?: any[],
+    result?: any,
+    finalStatus: boolean = false
 ): Promise<void> {
     const currentMemorySize = await getRawMemorySize(cuzzOptions.canisterName);
     const currentMemorySizeFormatted = formatMemorySize(currentMemorySize);
@@ -140,17 +149,21 @@ async function displayStatus(
               ).toFixed(1)
             : '∞';
 
-    if (cuzzOptions.clearConsole === true) {
+    if (cuzzOptions.clearConsole === true && finalStatus !== true) {
         console.clear();
     }
 
     console.info(`Canister: ${cuzzOptions.canisterName}`);
-    console.info(`Method: ${methodName}\n`);
 
-    console.info(`Call delay: ${cuzzOptions.callDelay}s`);
-    console.info(`Time elapsed: ${elapsedTime}s`);
+    if (finalStatus !== true) {
+        console.info(`Method: ${methodName}\n`);
+    }
+
+    console.info(`Call delay: ${cuzzOptions.callDelay} sec`);
+    console.info(`Time limit: ${cuzzOptions.timeLimit} min`);
+    console.info(`Time elapsed: ${elapsedTime} sec`);
     console.info(
-        `Time remaining: ${remainingTime}${remainingTime === '∞' ? '' : 's'}`
+        `Time remaining: ${remainingTime}${remainingTime === '∞' ? '' : 'sec'}`
     );
     console.info(`Number of calls: ${state.numCalls}\n`);
 
@@ -159,31 +172,33 @@ async function displayStatus(
     console.info(
         `Memory size (increase since starting):`,
         memoryIncreaseSinceStartingFormatted,
-        '\n'
+        '\n\n\n\n'
     );
 
-    console.info(
-        `      params:`,
-        util.inspect(params, {
-            depth: 5,
-            colors: true,
-            maxArrayLength: 100,
-            maxStringLength: 100
-        })
-    );
-    console.info(
-        `      result:`,
-        util.inspect(result, {
-            depth: 5,
-            colors: true,
-            maxArrayLength: 100,
-            maxStringLength: 100
-        }),
-        '\n'
-    );
+    if (finalStatus !== true) {
+        console.info(
+            `      params:`,
+            util.inspect(params, {
+                depth: 5,
+                colors: true,
+                maxArrayLength: 100,
+                maxStringLength: 100
+            })
+        );
+        console.info(
+            `      result:`,
+            util.inspect(result, {
+                depth: 5,
+                colors: true,
+                maxArrayLength: 100,
+                maxStringLength: 100
+            }),
+            '\n'
+        );
+    }
 }
 
-function formatMemorySize(bytes: number | null): string {
+export function formatMemorySize(bytes: number | null): string {
     if (bytes === null) return 'unknown';
     return `${bytes.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '_')} bytes`;
 }
@@ -198,12 +213,26 @@ function handleCyclesError(
     );
 
     if (isCyclesError) {
-        execSync(
-            `dfx ledger fabricate-cycles --canister ${canisterName} --cycles ${cuzzOptions.fabricateCycles}`
-        );
+        try {
+            execSync(
+                `dfx ledger fabricate-cycles --canister ${canisterName} --cycles ${cuzzOptions.fabricateCycles}`
+            );
+        } catch (error: any) {
+            // TODO should we just return here? Do we care if errors are ever thrown from the fabricate-cycles command?
+            if (isExpectedError(error, cuzzOptions.expectedErrors) === true) {
+                // It seems that the dfx ledger fabricate-cycles command is prone to many of the
+                // default expected errors, so we will just ignore them if they are found.
+                // The canister should try to fabricate cycles again if a default cycles error is thrown
+                // on subsequent calls.
+                return;
+            }
+
+            throw error;
+        }
     }
 }
 
+// TODO so anywhere that we are calling into dfx, we might need to check on the expected errors being thrown
 function isExpectedError(error: Error, expectedErrors: string[]): boolean {
     return expectedErrors.some((expected) => {
         const regex = new RegExp(expected);

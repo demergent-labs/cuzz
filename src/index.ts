@@ -1,4 +1,4 @@
-#!/usr/bin/env -S npx tsx
+// TODO we do need to see a displayStatus periodically
 
 import { Actor, HttpAgent } from '@dfinity/agent';
 import { execSync, spawn } from 'child_process';
@@ -13,11 +13,9 @@ import {
 } from '../candid_parser_wasm/pkg/candid_parser_wasm';
 import { getCuzzOptions } from './cuzz_options';
 import { fuzzLoop } from './fuzz_loop';
-import { CandidAst, CanisterActor, CuzzConfig, CuzzOptions } from './types';
+import { CandidAst, CanisterActor, CuzzOptions } from './types';
 
-main();
-
-async function main(): Promise<void> {
+export async function main(): Promise<void> {
     const cuzzOptions = await getCuzzOptions();
 
     if (cuzzOptions.skip === true || typeof cuzzOptions.skip === 'string') {
@@ -33,6 +31,14 @@ async function main(): Promise<void> {
     if (cuzzOptions.skipDeploy === false) {
         deploy(cuzzOptions.canisterName, cuzzOptions.deployArgs);
     }
+
+    // A canister under fuzzing will often run out of cycles
+    execSync(
+        `dfx ledger fabricate-cycles --canister ${cuzzOptions.canisterName} --cycles 10000000000000000000000000000`,
+        {
+            stdio: 'inherit'
+        }
+    );
 
     const candidService = await getCandidService(
         cuzzOptions.canisterName,
@@ -139,4 +145,6 @@ function getCanisterId(canisterName: string): string {
     }).trim();
 }
 
-export { CuzzConfig };
+export { CuzzConfig } from './types';
+export { DEFAULT_EXPECTED_ERRORS } from './cuzz_options';
+export { getRawMemorySize, formatMemorySize } from './fuzz_loop';
