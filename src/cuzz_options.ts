@@ -24,6 +24,7 @@ export const DEFAULT_EXPECTED_ERRORS = [
     'Specified ingress_expiry not within expected range',
     'timed out waiting to start executing',
     'TypeError: fetch failed',
+    'AgentReadStateError: Caught exception while attempting to read state: fetch failed',
     'cannot be larger than 3145728',
     'Error while making call: Gateway returned an error:',
     'Error while making call: Server returned an error',
