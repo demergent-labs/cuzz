@@ -41,7 +41,7 @@ export const DEFAULT_EXPECTED_ERRORS = [
     'byte index \\d+ is not a char boundary',
     'byte index \\d+ is out of bounds of',
     // TODO remove the error below once this issue is addressed (keep in mind it is a closed issue with new comments from Demergent Labs): https://github.com/dfinity/agent-js/issues/956
-    'Call was returned undefined, but type [[object Object]]',
+    'Call was returned undefined, but type \\[\\[object Object\\]\\]',
     ...DEFAULT_CYCLES_ERRORS
 ];
 
