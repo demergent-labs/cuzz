@@ -101,7 +101,10 @@ async function fuzzMethod(
         handleCyclesError(cuzzOptions, error, cuzzOptions.canisterName);
 
         if (isExpectedError(error, cuzzOptions.expectedErrors) === false) {
-            console.error('Error occurred with params:', methodArguments);
+            console.error(
+                `Error occurred on method ${methodName} with params:`,
+                methodArguments
+            );
             console.error(error);
             process.exit(1);
         }
