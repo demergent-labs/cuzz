@@ -1,6 +1,6 @@
 {
     "name": "cuzz",
-    "version": "0.0.16",
+    "version": "0.0.17",
     "description": "Fuzz testing for Internet Computer Protocol (ICP) canisters",
     "main": "src/index.ts",
     "bin": "src/bin.ts",
@@ -10,8 +10,8 @@
     },
     "license": "MIT",
     "dependencies": {
-        "@dfinity/agent": "^3.0.2",
-        "@dfinity/candid": "^3.0.2",
+        "@dfinity/agent": "^3.1.0",
+        "@dfinity/candid": "^3.1.0",
         "commander": "^12.1.0",
         "fast-check": "^4.1.1",
         "tsx": "^4.19.2"
