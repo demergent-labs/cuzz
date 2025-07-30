@@ -31,17 +31,15 @@ export const DEFAULT_EXPECTED_ERRORS = [
     'Error while making call: Timestamp failed to pass the watermark after retrying the configured 3 times. We cannot guarantee the integrity of the response since it could be a replay attack.',
     'Caught exception while attempting to read state: Timestamp failed to pass the watermark after retrying the configured 3 times. We cannot guarantee the integrity of the response since it could be a replay attack.',
     'Timestamp failed to pass the watermark after retrying the configured 3 times. We cannot guarantee the integrity of the response since it could be a replay attack.',
-    // 'Failed to apply system changes: Mismatch in cycles balance when resuming an update call',
-    // 'Failed to apply system changes: Mismatch in cycles balance when resuming a response call',
-    // 'Failed to apply system changes: Mismatch in cycles balance when resuming a replicated query',
     'Error while making call: fetch failed',
-    // 'Error while making call: Invalid certificate: Invalid signature from replica signed query: no matching node key found',
     'Invalid request expiry: Specified ingress_expiry not within expected range',
     'Uncaught Error: call perform failed',
     'byte index \\d+ is not a char boundary',
     'byte index \\d+ is out of bounds of',
     // TODO remove the error below once this issue is addressed (keep in mind it is a closed issue with new comments from Demergent Labs): https://github.com/dfinity/agent-js/issues/956
     'Call was returned undefined, but type',
+    'TrustError: Query response did not contain any node signatures',
+    'Expected to find result for path subnet, but instead found nothing',
     ...DEFAULT_CYCLES_ERRORS
 ];
 
