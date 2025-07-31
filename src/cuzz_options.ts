@@ -39,7 +39,13 @@ export const DEFAULT_EXPECTED_ERRORS = [
     // TODO remove the error below once this issue is addressed (keep in mind it is a closed issue with new comments from Demergent Labs): https://github.com/dfinity/agent-js/issues/956
     'Call was returned undefined, but type',
     'TrustError: Query response did not contain any node signatures',
+    'TrustError: Certificate is signed more than 5 minutes in the past',
     'Expected to find result for path subnet, but instead found nothing',
+    'UnknownError: Backoff strategy exhausted after 3 attempts',
+    'ProtocolError: Retry strategy exhausted after 3 attempts',
+    'ProtocolError: HTTP request failed',
+    'TransportError: Failed to fetch HTTP request: TypeError: fetch failed',
+    'The HTTP gateway is temporarily unable to process the request. Please try again later',
     ...DEFAULT_CYCLES_ERRORS
 ];
 
