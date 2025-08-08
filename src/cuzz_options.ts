@@ -36,8 +36,9 @@ export const DEFAULT_EXPECTED_ERRORS = [
     'Uncaught Error: call perform failed',
     'byte index \\d+ is not a char boundary',
     'byte index \\d+ is out of bounds of',
-    // TODO remove the error below once this issue is addressed (keep in mind it is a closed issue with new comments from Demergent Labs): https://github.com/dfinity/agent-js/issues/956
+    // TODO remove the errors below once this issue is addressed (keep in mind it is a closed issue with new comments from Demergent Labs): https://github.com/dfinity/agent-js/issues/956
     'Call was returned undefined, but type',
+    'Call was returned undefined. We cannot determine if the call was successful or not. Return types:',
     'TrustError: Query response did not contain any node signatures',
     'TrustError: Certificate is signed more than 5 minutes in the past',
     'Expected to find result for path subnet, but instead found nothing',
