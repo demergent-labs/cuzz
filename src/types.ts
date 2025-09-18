@@ -1,4 +1,4 @@
-import { ActorMethod, ActorSubclass } from '@dfinity/agent';
+import { ActorMethod, ActorSubclass } from '@icp-sdk/core/agent';
 import * as fc from 'fast-check';
 
 export type ArgumentsArbitraries = Record<string, ArgumentsArbitrary>;

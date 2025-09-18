@@ -1,6 +1,6 @@
 // TODO we do need to see a displayStatus periodically
 
-import { Actor, HttpAgent } from '@dfinity/agent';
+import { Actor, HttpAgent } from '@icp-sdk/core/agent';
 import { execSync, spawn } from 'child_process';
 import { readFile } from 'fs/promises';
 

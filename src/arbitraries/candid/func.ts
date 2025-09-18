@@ -1,4 +1,4 @@
-import { Principal } from '@dfinity/principal';
+import { Principal } from '@icp-sdk/core/principal';
 import * as fc from 'fast-check';
 
 import { CuzzOptions } from '../../types';

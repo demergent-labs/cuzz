@@ -10,8 +10,7 @@
     },
     "license": "MIT",
     "dependencies": {
-        "@dfinity/agent": "^3.2.1",
-        "@dfinity/candid": "^3.2.1",
+        "@icp-sdk/core": "^4.0.4",
         "commander": "^12.1.0",
         "fast-check": "^4.1.1",
         "tsx": "^4.19.2"
